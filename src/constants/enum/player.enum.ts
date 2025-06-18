@@ -1,0 +1,4 @@
+export enum CONTACT_CHANNEL {
+  EMAIL = "EMAIL",
+  TELEPHONE = "TELEPHONE",
+}

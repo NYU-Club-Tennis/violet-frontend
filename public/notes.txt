@@ -1,0 +1,24 @@
+src/
+├── components/
+│   ├── common/
+│   │   ├── Header.jsx
+│   │   ├── Footer.jsx
+│   │   └── ReviewCard.jsx
+│   ├── pages/
+│   │   ├── Home.jsx
+│   │   ├── CollegeList.jsx
+│   │   ├── CollegeDetail.jsx
+│   │   ├── DormDetail.jsx
+│   │   └── UserProfile.jsx
+│   └── features/
+│       ├── reviews/
+│       ├── authentication/
+│       └── search/
+├── hooks/
+├── context/
+├── services/
+│   ├── api.js
+│   └── auth.js
+├── utils/
+├── assets/
+└── App.jsx

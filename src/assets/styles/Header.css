@@ -1,0 +1,19 @@
+/*.active {
+  @apply text-purple-900;
+}
+/*
+.nav-links {
+  @apply flex gap-10;
+}
+
+.nav-links a {
+  @apply text-gray-800 font-medium transition-colors duration-300;
+}
+
+.header-container {
+  @apply w-full flex flex-col;
+}
+
+.nav-bar {
+  @apply flex justify-between items-center px-12 py-4 bg-white;
+}*/
