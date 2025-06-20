@@ -1,7 +1,7 @@
 import React, { FC } from "react";
 import { Outlet } from "react-router-dom";
 
-const AppLayout: FC = () => {
+const HomeLayout: FC = () => {
   return (
     <div>
       <Outlet />
@@ -9,4 +9,4 @@ const AppLayout: FC = () => {
   );
 };
 
-export default AppLayout;
+export default HomeLayout;

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosError, AxiosResponse, Method } from "axios";
 import { environment } from "constants/environment";
+import { AuthStore } from "stores/auth.store";
 
 export const fetch = <T, TP = any>(
   method: Method = "GET",
