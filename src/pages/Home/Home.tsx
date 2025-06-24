@@ -23,7 +23,7 @@ const Home: FC = () => {
 
       <div>
         <div className="w-screen h-screen flex items-center justify-center bg-[url('/src/assets/images/svgs/home-photo.svg')] bg-cover bg-center relative">
-          <div className="absolute inset-0 bg-black bg-opacity-50 z-0"></div>
+          <div className="absolute inset-0 bg-black bg-opacity-70 z-0"></div>
           <div
             className="
               absolute
