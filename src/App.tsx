@@ -12,22 +12,13 @@ import Welcome from "pages/Welcome/Welcome";
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/welcome" element={<Welcome />} />
-        <Route
-          path="/"
-          element={
-            <AppLayout>
-              <HomeLayout />
-            </AppLayout>
-          }
-        >
-          <Route index element={<Home />} />
-          <Route path="/questions" element={<Questions />} />
-          <Route path="/join" element={<Join />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/welcome" replace />} />
-      </Routes>
+      <AppLayout>
+        <Routes>
+          <Route path="/welcome" element={<Welcome />} />
+          <Route path="/" element={<HomeLayout />}></Route>
+          <Route path="*" element={<Navigate to="/welcome" replace />} />
+        </Routes>
+      </AppLayout>
     </BrowserRouter>
   );
 }
