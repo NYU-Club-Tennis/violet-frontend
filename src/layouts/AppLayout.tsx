@@ -1,12 +1,8 @@
-import React, { FC } from "react";
+import React, { FC, ReactNode } from "react";
 import { Outlet } from "react-router-dom";
 
-const AppLayout: FC = () => {
-  return (
-    <div>
-      <Outlet />
-    </div>
-  );
+const AppLayout: FC<{ children: ReactNode }> = ({ children }) => {
+  return <div className="min-h-screen">{children}</div>;
 };
 
 export default AppLayout;
