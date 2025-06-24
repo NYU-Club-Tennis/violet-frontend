@@ -4,4 +4,6 @@ export enum PAGE_TYPE {
   JOIN = "join",
   QUESTIONS = "questions",
   AUTH = "auth",
+  SIGNUP = "signup",
+  PROFILE = "profile",
 }
