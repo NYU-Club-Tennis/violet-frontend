@@ -43,14 +43,6 @@ const Navbar: React.FC = () => {
       ),
       children: activeKey === PAGE_TYPE.QUESTIONS ? <Questions /> : null,
     },
-    {
-      key: PAGE_TYPE.AUTH,
-      label: (
-        <div className="font-nyu-perstare font-extralight text-2xl text-white">
-          Sign Up
-        </div>
-      ),
-    },
   ];
 
   const handleTabChange = (key: string) => {
@@ -73,7 +65,7 @@ const Navbar: React.FC = () => {
           "[&_.ant-tabs-nav]:bg-black/80",
           "[&_.ant-tabs-ink-bar]:bg-nyu-purple",
           "[&_.ant-tabs-tab]:flex-1 [&_.ant-tabs-tab]:flex [&_.ant-tabs-tab]:justify-center",
-          "[&_.ant-tabs-nav-list]:w-full [&_.ant-tabs-nav-list]:gap-x-20 [&_.ant-tabs-nav-list]:justify-items-"
+          "[&_.ant-tabs-nav-list]:gap-x-20"
         )}
       />
     </div>
