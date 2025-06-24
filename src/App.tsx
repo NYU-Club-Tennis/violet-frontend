@@ -1,25 +1,32 @@
 import React from "react";
-import { useState } from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "pages/Home/Home";
 import AppLayout from "layouts/AppLayout";
 import HomeLayout from "layouts/HomeLayout";
 import AuthLayout from "layouts/AuthLayout";
 import Questions from "pages/Questions/Questions";
-
-// import ProtectedRoute from "./components/auth/ProtectedRoute";
+import Join from "pages/Join/Join";
+import Welcome from "pages/Welcome/Welcome";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <AppLayout>
-          <Route path="/" element={<HomeLayout />}>
-            <Route index element={<Home />} />
-            <Route path="/questions" element={<Questions />} />
-          </Route>
-        </AppLayout>
+        <Route path="/welcome" element={<Welcome />} />
+        <Route
+          path="/"
+          element={
+            <AppLayout>
+              <HomeLayout />
+            </AppLayout>
+          }
+        >
+          <Route index element={<Home />} />
+          <Route path="/questions" element={<Questions />} />
+          <Route path="/join" element={<Join />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/welcome" replace />} />
       </Routes>
     </BrowserRouter>
   );
