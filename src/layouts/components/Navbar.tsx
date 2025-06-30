@@ -1,14 +1,28 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Tabs, TabsProps } from "antd";
 import { PAGE_TYPE } from "constants/enum/page.enum";
 import Home from "pages/Home/Home";
 import Join from "pages/Join/Join";
 import Questions from "pages/Questions/Questions";
+import Profile from "pages/Profile/Profile";
 import logo from "assets/svgs/White-Athletic-logo-text.svg";
 import { cn } from "utils/style.util";
+import { AuthStore } from "stores/auth.store";
+import { useNavigate } from "react-router-dom";
 
 const Navbar: React.FC = () => {
   const [activeKey, setActiveKey] = useState<string>(PAGE_TYPE.HOME);
+  const { user, token } = AuthStore();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user || !token) {
+      // If user logs out and was on profile page, redirect to home
+      if (activeKey === PAGE_TYPE.PROFILE) {
+        setActiveKey(PAGE_TYPE.HOME);
+      }
+    }
+  }, [user, token, activeKey]);
 
   const items: TabsProps["items"] = [
     {
@@ -43,11 +57,23 @@ const Navbar: React.FC = () => {
       ),
       children: activeKey === PAGE_TYPE.QUESTIONS ? <Questions /> : null,
     },
+    {
+      key: user && token ? PAGE_TYPE.PROFILE : PAGE_TYPE.SIGNUP,
+      label: (
+        <div className="font-nyu-perstare font-extralight text-2xl text-white">
+          {user && token ? "Profile" : "Sign Up/Log in"}
+        </div>
+      ),
+      children:
+        user && token && activeKey === PAGE_TYPE.PROFILE ? <Profile /> : null,
+    },
   ];
 
   const handleTabChange = (key: string) => {
     if (key === "logo") {
       setActiveKey(PAGE_TYPE.HOME);
+    } else if (key === PAGE_TYPE.SIGNUP) {
+      navigate("/login");
     } else {
       setActiveKey(key);
     }

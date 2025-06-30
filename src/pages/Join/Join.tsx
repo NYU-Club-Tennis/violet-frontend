@@ -1,14 +1,15 @@
-import React, { FC } from "react";
+import React, { FC, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthStore } from "stores/auth.store";
 
 const Join: FC = () => {
-  const { token, player } = AuthStore();
-  const navigate = useNavigate();
+  const { token, user } = AuthStore();
 
-  if (!player || !token) {
-    navigate("/signup");
-  }
+  useEffect(() => {
+    if (!user || !token) {
+      console.log("user not logged in/token expired");
+    }
+  }, []);
 
   return <div>Join</div>;
 };

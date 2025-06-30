@@ -1,4 +1,6 @@
 import React, { FC, useEffect, useState } from "react";
+import oneServingAll from "assets/svgs/one-serving-all.svg";
+import homePhoto from "assets/svgs/home-photo.svg";
 
 const Home: FC = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -22,7 +24,14 @@ const Home: FC = () => {
       />
 
       <div>
-        <div className="w-screen h-screen flex items-center justify-center bg-[url('/src/assets/images/svgs/home-photo.svg')] bg-cover bg-center relative">
+        <div
+          className="w-screen h-screen flex items-center justify-center relative"
+          style={{
+            backgroundImage: `url(${homePhoto})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
           <div className="absolute inset-0 bg-black bg-opacity-70 z-0"></div>
           <div
             className="
@@ -31,9 +40,11 @@ const Home: FC = () => {
               z-10
               w-[35vw] max-w-[600px] h-auto
               aspect-[3/2]
-              bg-[url('/src/assets/images/svgs/one-serving-all.svg')]
               bg-no-repeat bg-left-bottom bg-contain
             "
+            style={{
+              backgroundImage: `url(${oneServingAll})`,
+            }}
           ></div>
         </div>
         <div className="w-screen h-screen flex items-center justify-center bg-gray-200">
