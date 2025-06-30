@@ -64,26 +64,15 @@ const CreateProfile = () => {
         password,
       };
 
-      console.log("Sending payload:", payload);
-
       const { data } = await createProfile(payload);
 
-      console.log("Received response data:", data);
-
       if (data) {
-        console.log("Setting user:", data.user);
-        console.log("Setting token:", data.token);
-        console.log("Setting refresh token:", data.refreshToken);
-
         setUser(data.user);
         setToken(data.token);
         setRefreshToken(data.refreshToken);
 
         // Add a small delay to ensure store is updated
         await new Promise((resolve) => setTimeout(resolve, 100));
-
-        const authStore = AuthStore.getState();
-        console.log("Auth store after setting:", authStore);
       }
 
       navigate("/");
@@ -114,10 +103,11 @@ const CreateProfile = () => {
       <div className="w-[600px] h-[600px] bg-white flex flex-col items-center py-8 px-28 shadow-2xl overflow-hidden">
         <img src={logo} alt="logo" className="w-24 h-auto mb-8" />
         <Form
+          layout="vertical"
           form={form}
           onFinish={handleSubmit}
           requiredMark={false}
-          className="w-full flex flex-col gap-5"
+          className="w-full flex flex-col"
         >
           <div className="flex gap-4">
             <Form.Item
@@ -125,9 +115,7 @@ const CreateProfile = () => {
               label={
                 <span className="font-nyu-perstare-condensed">First Name</span>
               }
-              rules={[
-                { required: true, message: "Please enter your first name" },
-              ]}
+              rules={[{ required: true, message: "First name is required" }]}
               className="flex-1 mb-0"
             >
               <Input className="font-nyu-perstare-condensed" />
@@ -138,9 +126,7 @@ const CreateProfile = () => {
               label={
                 <span className="font-nyu-perstare-condensed">Last Name</span>
               }
-              rules={[
-                { required: true, message: "Please enter your last name" },
-              ]}
+              rules={[{ required: true, message: "Last name is required" }]}
               className="flex-1 mb-0"
             >
               <Input className="font-nyu-perstare-condensed" />

@@ -23,3 +23,7 @@ export interface IAuthUserResponse {
   token: string;
   refreshToken: string;
 }
+export interface IAuthLoginRequest {
+  email: string;
+  password: string;
+}

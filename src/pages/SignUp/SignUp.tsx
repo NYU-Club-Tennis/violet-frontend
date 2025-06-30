@@ -1,14 +1,22 @@
 import { Button, Form, Input, Modal } from "antd";
 import logo from "../../assets/svgs/Purple-Athletic-logo-text.svg";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { userSignUp } from "actions/auth.action";
+import { AuthStore } from "stores/auth.store";
 
 const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = AuthStore();
   const [isError, setIsError] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user]);
 
   const handleSubmit = async () => {
     setIsLoading(true);
