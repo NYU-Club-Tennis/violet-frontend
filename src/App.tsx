@@ -8,7 +8,9 @@ import AuthLayout from "layouts/AuthLayout";
 import Questions from "pages/Questions/Questions";
 import Join from "pages/Join/Join";
 import Welcome from "pages/Welcome/Welcome";
+import Login from "pages/Login/Login";
 import SignUp from "pages/SignUp/SignUp";
+import CreateProfile from "pages/CreateProfile/CreateProfile";
 
 function App() {
   return (
@@ -17,7 +19,9 @@ function App() {
         <Routes>
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/" element={<HomeLayout />}></Route>
+          <Route path="/login" element={<Login />}></Route>
           <Route path="/signup" element={<SignUp />}></Route>
+          <Route path="/create-profile" element={<CreateProfile />}></Route>
           <Route path="*" element={<Navigate to="/welcome" replace />} />
         </Routes>
       </AppLayout>

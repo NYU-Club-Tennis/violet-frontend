@@ -12,17 +12,17 @@ import { useNavigate } from "react-router-dom";
 
 const Navbar: React.FC = () => {
   const [activeKey, setActiveKey] = useState<string>(PAGE_TYPE.HOME);
-  const { player, token } = AuthStore();
+  const { user, token } = AuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!player || !token) {
+    if (!user || !token) {
       // If user logs out and was on profile page, redirect to home
       if (activeKey === PAGE_TYPE.PROFILE) {
         setActiveKey(PAGE_TYPE.HOME);
       }
     }
-  }, [player, token, activeKey]);
+  }, [user, token, activeKey]);
 
   const items: TabsProps["items"] = [
     {
@@ -58,14 +58,14 @@ const Navbar: React.FC = () => {
       children: activeKey === PAGE_TYPE.QUESTIONS ? <Questions /> : null,
     },
     {
-      key: player && token ? PAGE_TYPE.PROFILE : PAGE_TYPE.SIGNUP,
+      key: user && token ? PAGE_TYPE.PROFILE : PAGE_TYPE.SIGNUP,
       label: (
         <div className="font-nyu-perstare font-extralight text-2xl text-white">
-          {player && token ? "Profile" : "Sign Up"}
+          {user && token ? "Profile" : "Sign Up/Log in"}
         </div>
       ),
       children:
-        player && token && activeKey === PAGE_TYPE.PROFILE ? <Profile /> : null,
+        user && token && activeKey === PAGE_TYPE.PROFILE ? <Profile /> : null,
     },
   ];
 
@@ -73,7 +73,7 @@ const Navbar: React.FC = () => {
     if (key === "logo") {
       setActiveKey(PAGE_TYPE.HOME);
     } else if (key === PAGE_TYPE.SIGNUP) {
-      navigate("/signup");
+      navigate("/login");
     } else {
       setActiveKey(key);
     }

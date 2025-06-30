@@ -5,11 +5,11 @@ import { TAuth } from "./types/auth.type";
 export const AuthStore = create(
   persist<TAuth>(
     (set) => ({
-      player: null,
+      user: null,
       token: null,
       refreshToken: null,
-      setPlayer: (player) => {
-        set({ player });
+      setUser: (user) => {
+        set({ user });
       },
       setToken: (token) => {
         set({ token });
@@ -18,7 +18,7 @@ export const AuthStore = create(
         set({ refreshToken });
       },
       clear: () => {
-        set({ player: null, token: null, refreshToken: null });
+        set({ user: null, token: null, refreshToken: null });
       },
     }),
     {

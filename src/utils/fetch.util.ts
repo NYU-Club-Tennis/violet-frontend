@@ -3,6 +3,18 @@ import axios, { AxiosError, AxiosResponse, Method } from "axios";
 import { environment } from "constants/environment";
 import { AuthStore } from "stores/auth.store";
 
+// ---- Token refresh state ----
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) prom.reject(error);
+    else prom.resolve(token);
+  });
+  failedQueue = [];
+};
+
 export const fetch = <T, TP = any>(
   method: Method = "GET",
   path = "/",
@@ -15,18 +27,6 @@ export const fetch = <T, TP = any>(
   const queryName = method === "GET" ? "params" : "data";
 
   const api = axios.create({ baseURL });
-
-  // ---- Token refresh state ----
-  let isRefreshing = false;
-  let failedQueue: any[] = [];
-
-  const processQueue = (error: any, token: string | null = null) => {
-    failedQueue.forEach((prom) => {
-      if (error) prom.reject(error);
-      else prom.resolve(token);
-    });
-    failedQueue = [];
-  };
 
   // ---- Request Interceptor ----
   api.interceptors.request.use((config) => {

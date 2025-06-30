@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { AuthStore } from "stores/auth.store";
 
 const Join: FC = () => {
-  const { token, player } = AuthStore();
+  const { token, user } = AuthStore();
 
   useEffect(() => {
-    if (!player || !token) {
+    if (!user || !token) {
       console.log("user not logged in/token expired");
     }
   }, []);
