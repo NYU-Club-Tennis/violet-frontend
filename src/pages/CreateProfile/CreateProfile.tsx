@@ -1,6 +1,6 @@
 import { Button, Form, Input, Modal } from "antd";
 import React, { useEffect, useState } from "react";
-import logo from "../../assets/svgs/Purple-Athletic-logo-text.svg";
+import { purpleAthleticLogoText as logo } from "assets";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AuthStore } from "stores/auth.store";
 import { createProfile, validateCode } from "actions/auth.action";
