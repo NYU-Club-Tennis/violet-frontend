@@ -26,8 +26,16 @@ jobs:
       - name: Fetch upstream
         run: |
           git fetch upstream
+          git fetch origin
+          
+      - name: Sync main branch
+        run: |
+          git checkout origin main
+          git merge upstream/main
+          git push origin main
+          
       - name: Sync develop branch
         run: |
-          git checkout -b origin develop
+          git checkout origin develop
           git merge upstream/develop
           git push origin develop
