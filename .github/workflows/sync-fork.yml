@@ -8,7 +8,6 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,13 +26,14 @@ jobs:
       - name: Fetch upstream
         run: |
           git fetch upstream
-
+          git fetch origin
+          
       - name: Sync main branch
         run: |
-          git checkout main
+          git checkout origin main
           git merge upstream/main
           git push origin main
-
+          
       - name: Sync develop branch
         run: |
           git checkout origin develop
