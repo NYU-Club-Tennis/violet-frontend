@@ -1,5 +1,5 @@
 import { Button, Form, Input, Modal } from "antd";
-import logo from "../../assets/svgs/Purple-Athletic-logo-text.svg";
+import { purpleAthleticLogoText as logo } from "assets";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { userSignUp } from "actions/auth.action";

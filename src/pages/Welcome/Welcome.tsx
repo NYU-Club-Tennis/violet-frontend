@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "../../assets/svgs/White-Athletic-logo-text.svg";
+import { whiteAthleticLogoText as logo } from "assets";
 import { HomeLayoutStore } from "stores/home.layout.store";
 
 const Welcome: React.FC = () => {
