@@ -5,7 +5,7 @@ import Home from "pages/Home/Home";
 import Join from "pages/Join/Join";
 import Questions from "pages/Questions/Questions";
 import Profile from "pages/Profile/Profile";
-import logo from "assets/svgs/White-Athletic-logo-text.svg";
+import { whiteAthleticLogoText as logo } from "assets";
 import { cn } from "utils/style.util";
 import { AuthStore } from "stores/auth.store";
 import { useNavigate } from "react-router-dom";
