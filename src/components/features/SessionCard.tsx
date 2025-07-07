@@ -1,86 +1,107 @@
-import React from "react";
+import React, { FC } from "react";
+import { Card, Button, Tag, Typography } from "antd";
+import { ISession } from "interfaces/session.interface";
+import { ButtonProps } from "antd/lib/button";
+import classNames from "classnames";
 
-interface Session {
-  id: number;
-  spotsAvailable: number;
-  day: string;
-  date: string;
-  time: string;
-  location: string;
-  levels: string;
-  spotsTotal: number;
-  // Add other session fields as needed
-}
-
-interface User {
-  id: number;
-  name: string;
-  // Add other user fields as needed
-}
+const { Text } = Typography;
 
 interface SessionCardProps {
-  session: Session;
-  isSelected: boolean;
-  onSelect: (id: number) => void;
-  disabled: boolean;
-  user: User;
+  session: ISession;
+  isLoggedIn: boolean;
+  isRegistered?: boolean;
 }
 
-const SessionCard: React.FC<SessionCardProps> = ({
+const SessionCard: FC<SessionCardProps> = ({
   session,
-  isSelected,
-  onSelect,
-  disabled,
-  user,
+  isLoggedIn,
+  isRegistered,
 }) => {
+  const getButtonProps = (): ButtonProps & { className?: string } => {
+    if (!isLoggedIn) {
+      return {
+        children: "Login to Register",
+        disabled: true,
+        type: "default",
+      };
+    }
+
+    if (isRegistered) {
+      return {
+        children: "Registered",
+        type: "primary",
+        disabled: true,
+        className:
+          "!bg-nyu-purple !border-nyu-purple hover:!bg-nyu-purple-light hover:!border-nyu-purple-light",
+        style: { backgroundColor: "#57068c" },
+      };
+    }
+
+    if (session.spotsAvailable === 0) {
+      return {
+        children: "No Spots Available",
+        disabled: true,
+        type: "default",
+      };
+    }
+
+    return {
+      children: "Register",
+      type: "primary",
+      disabled: false,
+      className:
+        "!bg-nyu-purple !border-nyu-purple hover:!bg-nyu-purple-light hover:!border-nyu-purple-light",
+      style: { backgroundColor: "#57068c" },
+    };
+  };
+
+  const getSkillLevelColor = (skillLevel: string): string => {
+    switch (skillLevel.toLowerCase()) {
+      case "beginner":
+        return "green";
+      case "intermediate":
+        return "blue";
+      case "advanced":
+        return "red";
+      default:
+        return "default";
+    }
+  };
+
   return (
-    <div
-      className={`bg-white rounded-lg shadow-md overflow-hidden border-2 ${
-        isSelected ? "border-nyu-purple" : "border-transparent"
-      }`}
+    <Card
+      title={session.name}
+      extra={
+        <Tag color={getSkillLevelColor(session.skillLevel)}>
+          {session.skillLevel}
+        </Tag>
+      }
+      className="mb-4"
     >
-      <div className="bg-nyu-purple py-3 px-4">
-        <h3 className="text-xl font-bold text-white">
-          {session.day} - {session.date}
-        </h3>
-      </div>
-      <div className="p-6">
-        {/* Card content */}
-        <div className="mb-4">
-          <p className="text-lg font-semibold">{session.time}</p>
-          <p className="text-gray-600">{session.location}</p>
+      <div className="flex flex-col gap-2">
+        <div>
+          <Text strong>Location: </Text>
+          <Text>{session.location}</Text>
         </div>
-        <div className="mb-4">
-          <span className="inline-block bg-purple-100 text-nyu-purple px-3 py-1 rounded-full text-sm font-medium">
-            {session.levels}
-          </span>
+        <div>
+          <Text strong>Date: </Text>
+          <Text>{session.date}</Text>
         </div>
-        <div className="flex justify-between items-center">
-          <p className="text-gray-700">
-            <span className="font-semibold">{session.spotsAvailable}</span> of{" "}
-            <span className="font-semibold">{session.spotsTotal}</span> spots
-            available
-          </p>
-          <button
-            onClick={() => onSelect(session.id)}
-            className={`px-4 py-2 rounded-md ${
-              disabled || !user
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-nyu-purple text-white hover:bg-purple-800"
-            }`}
-            disabled={disabled}
-          >
-            {!user
-              ? "Sign in to register"
-              : isSelected
-              ? "Selected"
-              : disabled
-              ? "Full"
-              : "Register"}
-          </button>
+        <div>
+          <Text strong>Time: </Text>
+          <Text>{session.time}</Text>
+        </div>
+        <div>
+          <Text strong>Available Spots: </Text>
+          <Text>
+            {session.spotsAvailable} / {session.spotsTotal}
+          </Text>
+        </div>
+        <div className="mt-4">
+          <Button {...getButtonProps()} block />
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 

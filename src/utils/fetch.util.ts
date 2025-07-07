@@ -84,7 +84,6 @@ export const fetch = <T, TP = any>(
         } catch (err) {
           processQueue(err, null);
           clear();
-          window.location.href = "/login";
           return Promise.reject(err);
         } finally {
           isRefreshing = false;
