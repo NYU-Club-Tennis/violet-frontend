@@ -6,13 +6,20 @@ import SessionCard from "components/features/SessionCard";
 import { ISession } from "interfaces/session.interface";
 import { LoadingOutlined } from "@ant-design/icons";
 import { IPaginateResponse } from "interfaces/common.interface";
+import { getCurrentUser } from "actions/user.action";
+import { getCurrentUserRegistrations } from "actions/registration.action";
+import { IRegistration } from "interfaces/registration.interface";
+import { RegistrationStatus } from "constants/enum/registration.status.enum";
+import axios from "axios";
 
 const Join: FC = () => {
   const { token, user } = AuthStore();
   const [sessions, setSessions] = useState<ISession[]>([]);
+  const [registrations, setRegistrations] = useState<IRegistration[]>([]);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [loadingRegistrations, setLoadingRegistrations] = useState(false);
   const pageSize = 9;
 
   const fetchSessions = async (page: number) => {
@@ -32,16 +39,67 @@ const Join: FC = () => {
     }
   };
 
+  const fetchRegistrations = async () => {
+    if (!token) {
+      return;
+    }
+
+    setLoadingRegistrations(true);
+    try {
+      const query = {
+        status: [RegistrationStatus.REGISTERED, RegistrationStatus.WAITLISTED],
+        includeSession: true,
+      };
+
+      const response = await getCurrentUserRegistrations(query);
+
+      if (response?.data) {
+        setRegistrations(response.data);
+      } else {
+        console.warn("No data in registration response");
+        setRegistrations([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch registrations:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("Error response:", error.response);
+      }
+      setRegistrations([]);
+    } finally {
+      setLoadingRegistrations(false);
+    }
+  };
+
   useEffect(() => {
+    getCurrentUser();
     fetchSessions(currentPage);
   }, [currentPage]);
+
+  useEffect(() => {
+    if (token) {
+      fetchRegistrations();
+    } else {
+      setRegistrations([]);
+    }
+  }, [token, user?.id]); // Also watch for user ID changes
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  // TODO: Replace with actual registration check
-  const isRegistered = (sessionId: number) => false;
+  const getRegistrationForSession = (
+    sessionId: number
+  ): IRegistration | null => {
+    if (loadingRegistrations) {
+      return null;
+    }
+
+    const registration = registrations.find(
+      (reg) => reg.sessionId === sessionId
+    );
+
+    return registration || null;
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 pt-36">
@@ -58,7 +116,7 @@ const Join: FC = () => {
                 <SessionCard
                   session={session}
                   isLoggedIn={!!token}
-                  isRegistered={isRegistered(session.id)}
+                  registration={getRegistrationForSession(session.id)}
                 />
               </Col>
             ))}
