@@ -137,7 +137,7 @@ const Navbar: React.FC = () => {
       </Drawer>
 
       {/* Desktop Navigation */}
-      <div className="min-[901px]:block hidden">
+      <div>
         <Tabs
           activeKey={activeKey}
           onChange={handleTabChange}
@@ -148,17 +148,10 @@ const Navbar: React.FC = () => {
             "[&_.ant-tabs-nav]:bg-black/80",
             "[&_.ant-tabs-ink-bar]:bg-nyu-purple",
             "[&_.ant-tabs-tab]:flex-1 [&_.ant-tabs-tab]:flex [&_.ant-tabs-tab]:justify-center",
-            "[&_.ant-tabs-nav-list]:gap-x-4 min-[901px]:[&_.ant-tabs-nav-list]:gap-x-20"
+            "[&_.ant-tabs-nav-list]:gap-x-4 min-[901px]:[&_.ant-tabs-nav-list]:gap-x-20",
+            "max-[900px]:[&_.ant-tabs-nav]:hidden"
           )}
         />
-      </div>
-
-      {/* Content */}
-      <div className="min-[901px]:pt-[100px]">
-        {activeKey === PAGE_TYPE.HOME ? <Home /> : null}
-        {activeKey === PAGE_TYPE.JOIN ? <Join /> : null}
-        {activeKey === PAGE_TYPE.QUESTIONS ? <Questions /> : null}
-        {user && token && activeKey === PAGE_TYPE.PROFILE ? <Profile /> : null}
       </div>
     </div>
   );

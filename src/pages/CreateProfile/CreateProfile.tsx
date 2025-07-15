@@ -36,11 +36,7 @@ const CreateProfile = () => {
     try {
       const response = await validateCode(resetCode!);
 
-      console.log("response", response);
-
       const { email } = response.data;
-
-      console.log("email", email);
 
       setEmail(email);
       form.setFieldValue("email", email);

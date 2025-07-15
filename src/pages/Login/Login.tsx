@@ -98,10 +98,7 @@ const Login = () => {
               validateStatus={isError ? "error" : ""}
               className="w-full"
             >
-              <Input
-                placeholder="Your NYU Email"
-                className="font-nyu-perstare-condensed"
-              />
+              <Input />
             </Form.Item>
 
             <Form.Item
@@ -115,10 +112,7 @@ const Login = () => {
               validateStatus={isError ? "error" : ""}
               className="w-full"
             >
-              <Input
-                placeholder="Your Password"
-                className="font-nyu-perstare-condensed"
-              />
+              <Input.Password />
             </Form.Item>
 
             <Form.Item shouldUpdate>
