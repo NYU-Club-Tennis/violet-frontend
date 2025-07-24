@@ -3,7 +3,7 @@ import { IUser } from "./user.interface";
 export interface IAuthUser
   extends Pick<
     IUser,
-    "id" | "firstName" | "lastName" | "email" | "createdAt"
+    "id" | "firstName" | "lastName" | "email" | "createdAt" | "isAdmin"
   > {}
 
 export interface IAuthValidateCodeResponse {

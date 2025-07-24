@@ -1,34 +1,38 @@
 import {
-  ICreateRegistration,
-  IRegistration,
-  IGetRegistrationHistoryQuery,
+  IRegistrationWithUser,
+  ISessionRegistrationsResponse,
 } from "interfaces/registration.interface";
 import { fetch } from "../utils/fetch.util";
 
 const url = "registration";
 
-export const createRegistration = (payload: ICreateRegistration) => {
-  const method = "POST";
-  const path = `${url}`;
+export const getSessionRegistrationsWithUsers = (sessionId: number) => {
+  const method = "GET";
+  const path = `${url}/session/${sessionId}/users`;
 
-  return fetch<IRegistration>(method, path, payload);
+  return fetch<ISessionRegistrationsResponse>(method, path);
 };
 
-export const getCurrentUserRegistrations = (
-  query?: IGetRegistrationHistoryQuery
-) => {
+export const getCurrentUserRegistrations = (query: any) => {
   const method = "GET";
   const path = `${url}/current`;
 
-  return fetch<IRegistration[]>(method, path, query);
+  return fetch<IRegistrationWithUser[]>(method, path, query);
 };
 
-export const getUserRegistrations = (
-  userId: number,
-  query?: IGetRegistrationHistoryQuery
-) => {
+export const getActiveRegistrationsCount = () => {
   const method = "GET";
-  const path = `${url}/user/${userId}`;
+  const path = `${url}/active/count`;
 
-  return fetch<IRegistration[]>(method, path, query);
+  return fetch<{ count: number }>(method, path);
+};
+
+export const markAttendance = (
+  registrationId: number,
+  hasAttended: boolean
+) => {
+  const method = "POST";
+  const path = `${url}/${registrationId}/attendance`;
+
+  return fetch<IRegistrationWithUser>(method, path, { hasAttended });
 };

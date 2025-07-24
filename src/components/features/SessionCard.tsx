@@ -23,6 +23,10 @@ const SessionCard: FC<SessionCardProps> = ({
 
   const isRegistered = !!registration;
   const isWaitlisted = registration?.status === RegistrationStatus.WAITLISTED;
+  const isCompleted = registration?.status === RegistrationStatus.COMPLETED;
+  const isNoShow = registration?.status === RegistrationStatus.NO_SHOW;
+  const isActiveRegistration =
+    registration?.status === RegistrationStatus.REGISTERED;
   const waitlistPosition = isWaitlisted ? registration.position : null;
 
   const getButtonProps = (
@@ -59,8 +63,27 @@ const SessionCard: FC<SessionCardProps> = ({
           type: "default",
         };
       default:
-        // If user is registered, show unregister button
-        if (isRegistered) {
+        // If user has completed the session or was marked as no-show, show status
+        if (isCompleted) {
+          return {
+            children: "Attended",
+            disabled: true,
+            type: "default",
+            className: "!bg-green-100 !border-green-300 !text-green-700",
+          };
+        }
+
+        if (isNoShow) {
+          return {
+            children: "No Show",
+            disabled: true,
+            type: "default",
+            className: "!bg-red-100 !border-red-300 !text-red-700",
+          };
+        }
+
+        // If user is actively registered or waitlisted, show unregister button
+        if (isActiveRegistration || isWaitlisted) {
           return {
             children: isWaitlisted ? "Leave Waitlist" : "Unregister",
             type: "primary",
@@ -144,12 +167,35 @@ const SessionCard: FC<SessionCardProps> = ({
       );
     }
 
+    if (isCompleted) {
+      return (
+        <div>
+          <Text strong className="block mb-2">
+            Registration Status
+          </Text>
+          <Tag color="green">Attended</Tag>
+        </div>
+      );
+    }
+
+    if (isNoShow) {
+      return (
+        <div>
+          <Text strong className="block mb-2">
+            Registration Status
+          </Text>
+          <Tag color="red">No Show</Tag>
+        </div>
+      );
+    }
+
+    // Default for active registration
     return (
       <div>
         <Text strong className="block mb-2">
           Registration Status
         </Text>
-        <Tag color="green">Registered</Tag>
+        <Tag color="blue">Registered</Tag>
       </div>
     );
   };
@@ -173,7 +219,7 @@ const SessionCard: FC<SessionCardProps> = ({
       <Card
         title={session.name}
         extra={renderSkillLevels()}
-        className="mb-4 cursor-pointer hover:shadow-lg transition-shadow"
+        className="mb-4 cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300"
         onClick={handleCardClick}
       >
         <div className="flex flex-col gap-2">

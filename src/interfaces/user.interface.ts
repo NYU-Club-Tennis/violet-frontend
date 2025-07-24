@@ -1,4 +1,9 @@
-import { IBaseEntity, IPaginateQuery, ISortOption } from "./common.interface";
+import {
+  IBaseEntity,
+  IPaginateQuery,
+  ISortOption,
+  IPaginateResponse,
+} from "./common.interface";
 import { CONTACT_CHANNEL } from "constants/enum/player.enum";
 import { ISession } from "./session.interface";
 
@@ -11,10 +16,19 @@ export interface IUser extends IBaseEntity {
   password?: string;
   avatarUrl?: string;
   isAdmin: boolean;
+  noShowCount?: number;
+  lastSignInAt?: string;
 }
 
 export type IUserCreate = Omit<IUser, "id">;
 
 export interface IUserPaginateQuery extends IPaginateQuery {
-  sortOptions: ISortOption[];
+  sortOptions?: ISortOption[];
+  search?: string;
 }
+
+export interface IUserCountResponse {
+  count: number;
+}
+
+export interface IUserPaginateResponse extends IPaginateResponse<IUser> {}
