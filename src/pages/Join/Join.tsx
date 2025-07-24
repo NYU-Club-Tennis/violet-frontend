@@ -13,7 +13,7 @@ import { RegistrationStatus } from "constants/enum/registration.status.enum";
 import axios from "axios";
 
 const Join: FC = () => {
-  const { token, user } = AuthStore();
+  const { token, user, setUser } = AuthStore();
   const [sessions, setSessions] = useState<ISession[]>([]);
   const [registrations, setRegistrations] = useState<IRegistration[]>([]);
   const [total, setTotal] = useState(0);
@@ -47,7 +47,12 @@ const Join: FC = () => {
     setLoadingRegistrations(true);
     try {
       const query = {
-        status: [RegistrationStatus.REGISTERED, RegistrationStatus.WAITLISTED],
+        status: [
+          RegistrationStatus.REGISTERED,
+          RegistrationStatus.WAITLISTED,
+          RegistrationStatus.COMPLETED,
+          RegistrationStatus.NO_SHOW,
+        ],
         includeSession: true,
       };
 
@@ -71,9 +76,23 @@ const Join: FC = () => {
   };
 
   useEffect(() => {
-    getCurrentUser();
+    const initializeUser = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (currentUser?.data) {
+          setUser(currentUser.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch current user:", error);
+      }
+    };
+
+    initializeUser();
+  }, [setUser]); // Only run when setUser changes (which should be never)
+
+  useEffect(() => {
     fetchSessions(currentPage);
-  }, [currentPage]);
+  }, [currentPage]); // Only run when page changes
 
   useEffect(() => {
     if (token) {

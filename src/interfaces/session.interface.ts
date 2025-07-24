@@ -16,9 +16,37 @@ export interface ISession extends IBaseEntity {
   registration?: any; // TODO: Add proper registration interface when available
 }
 
-export type ISessionCreate = Omit<ISession, "id">;
+export interface ISessionCreate {
+  name: string;
+  location: string;
+  date: string;
+  time: string;
+  skillLevels: LEVELS[];
+  spotsTotal: number;
+  spotsAvailable: number;
+  status?: SessionStatus;
+  notes?: string;
+}
+
+export interface ISessionUpdate {
+  name?: string;
+  location?: string;
+  date?: string;
+  time?: string;
+  skillLevels?: LEVELS[];
+  spotsTotal?: number;
+  spotsAvailable?: number;
+  status?: SessionStatus;
+  notes?: string;
+}
+
+export type ISessionUpdateOld = Omit<ISession, "id">;
 
 export interface ISessionPaginateQuery extends IPaginateQuery {
   sortOptions: ISortOption[];
   skillLevels?: LEVELS[];
+}
+
+export interface ISessionCountResponse {
+  count: number;
 }
