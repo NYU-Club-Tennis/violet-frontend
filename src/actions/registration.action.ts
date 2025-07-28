@@ -1,10 +1,19 @@
 import {
   IRegistrationWithUser,
   ISessionRegistrationsResponse,
+  ICreateRegistration,
+  IRegistration,
 } from "interfaces/registration.interface";
 import { fetch } from "../utils/fetch.util";
 
 const url = "registration";
+
+export const createRegistration = (payload: ICreateRegistration) => {
+  const method = "POST";
+  const path = `${url}`;
+
+  return fetch<IRegistration>(method, path, payload);
+};
 
 export const getSessionRegistrationsWithUsers = (sessionId: number) => {
   const method = "GET";
