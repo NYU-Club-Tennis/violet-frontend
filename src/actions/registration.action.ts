@@ -36,3 +36,10 @@ export const markAttendance = (
 
   return fetch<IRegistrationWithUser>(method, path, { hasAttended });
 };
+
+export const deleteRegistration = (registrationId: number) => {
+  const method = "DELETE";
+  const path = `${url}/${registrationId}`;
+
+  return fetch(method, path);
+};

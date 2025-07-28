@@ -106,6 +106,12 @@ const Join: FC = () => {
     setCurrentPage(page);
   };
 
+  const handleRegistrationChange = () => {
+    // Refresh both registrations AND sessions data
+    fetchRegistrations();
+    fetchSessions(currentPage);
+  };
+
   const getRegistrationForSession = (
     sessionId: number
   ): IRegistration | null => {
@@ -136,6 +142,7 @@ const Join: FC = () => {
                   session={session}
                   isLoggedIn={!!token}
                   registration={getRegistrationForSession(session.id)}
+                  onRegistrationChange={handleRegistrationChange}
                 />
               </Col>
             ))}
