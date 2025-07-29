@@ -1,1 +1,22 @@
-/* Your App-specific styles here */
+/* Essential custom styles only */
+.glass-table .ant-table {
+  background: transparent !important;
+}
+
+.glass-table .ant-table-thead > tr > th {
+  background: rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  color: #374151;
+  font-weight: 600;
+}
+
+.glass-table .ant-table-tbody > tr > td {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-table .ant-table-tbody > tr:hover > td {
+  background: rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(10px);
+}

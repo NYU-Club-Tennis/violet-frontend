@@ -7,6 +7,17 @@ import {
 import { CONTACT_CHANNEL } from "constants/enum/player.enum";
 import { ISession } from "./session.interface";
 
+export enum Role {
+  USER = "user",
+  ADMIN = "admin",
+  MEMBER = "member",
+}
+
+export enum MembershipLevel {
+  USER = "user",
+  MEMBER = "member",
+}
+
 export interface IUser extends IBaseEntity {
   id: number;
   firstName: string;
@@ -16,8 +27,10 @@ export interface IUser extends IBaseEntity {
   password?: string;
   avatarUrl?: string;
   isAdmin: boolean;
+  membershipLevel: MembershipLevel;
   noShowCount?: number;
   lastSignInAt?: string;
+  role?: Role; // Optional field for local state management
 }
 
 export type IUserCreate = Omit<IUser, "id">;
@@ -32,3 +45,11 @@ export interface IUserCountResponse {
 }
 
 export interface IUserPaginateResponse extends IPaginateResponse<IUser> {}
+
+export interface IUpdateUserRoleRequest {
+  role: Role;
+}
+
+export interface IUpdateMembershipLevelRequest {
+  membershipLevel: MembershipLevel;
+}

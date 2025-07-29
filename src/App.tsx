@@ -15,6 +15,7 @@ import CreateProfile from "pages/CreateProfile/CreateProfile";
 import Dashboard from "pages/Bof/Dashboard/Dashboard";
 import Users from "pages/Bof/Users/Users";
 import Sessions from "pages/Bof/Sessions/Sessions";
+import Email from "pages/Bof/Email/Email";
 import Settings from "pages/Bof/Settings/Settings";
 
 function App() {
@@ -24,9 +25,9 @@ function App() {
         <Routes>
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/" element={<HomeLayout />}></Route>
-          <Route path="/login" element={<Login />}></Route>
-          <Route path="/signup" element={<SignUp />}></Route>
-          <Route path="/create-profile" element={<CreateProfile />}></Route>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/create-profile" element={<CreateProfile />} />
 
           {/* Back Office Routes */}
           <Route path="/bof" element={<BofLayout />}>
@@ -34,6 +35,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="users" element={<Users />} />
             <Route path="sessions" element={<Sessions />} />
+            <Route path="email" element={<Email />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 

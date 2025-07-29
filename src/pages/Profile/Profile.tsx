@@ -32,7 +32,7 @@ const Profile = () => {
             <Button
               type="primary"
               onClick={() => navigate("/bof/dashboard")}
-              className="bg-nyu-purple hover:!bg-nyu-purple-light mb-4"
+              className="bg-gradient-to-r from-purple-500 to-blue-500 border-none rounded-xl shadow-lg shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/40"
             >
               Go to Admin Panel
             </Button>

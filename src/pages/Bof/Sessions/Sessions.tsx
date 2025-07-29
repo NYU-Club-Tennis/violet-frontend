@@ -16,6 +16,8 @@ import {
   TimePicker,
   InputNumber,
   message,
+  Radio,
+  Card,
 } from "antd";
 import {
   PlusOutlined,
@@ -23,6 +25,7 @@ import {
   EnvironmentOutlined,
   UserOutlined,
   CloseOutlined,
+  MailOutlined,
 } from "@ant-design/icons";
 import {
   getSessionPaginate,
@@ -34,6 +37,7 @@ import {
   getSessionRegistrationsWithUsers,
   markAttendance,
 } from "actions/registration.action";
+import { sendBulkAnnouncement } from "actions/mail.action";
 import {
   ISession,
   ISessionCreate,
@@ -83,6 +87,14 @@ const Sessions: FC = () => {
   );
   const [form] = Form.useForm<CreateSessionFormData>();
   const [editForm] = Form.useForm<CreateSessionFormData>();
+
+  // Email-related state
+  const [emailForm] = Form.useForm();
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailRecipients, setEmailRecipients] = useState<
+    "registered" | "waitlist" | "both"
+  >("registered");
+
   const pageSize = 10;
 
   const fetchSessions = async (page: number, status?: SessionStatus) => {
@@ -138,6 +150,9 @@ const Sessions: FC = () => {
     setRegistrationsModalVisible(false);
     setSelectedSession(null);
     setSessionRegistrations([]);
+    // Reset email form and state
+    emailForm.resetFields();
+    setEmailRecipients("registered");
   };
 
   const handleCreateSession = () => {
@@ -189,6 +204,74 @@ const Sessions: FC = () => {
     } finally {
       setCreateLoading(false);
     }
+  };
+
+  const handleEmailSubmit = async (values: {
+    header: string;
+    subject: string;
+    body: string;
+  }) => {
+    if (!selectedSession) return;
+
+    setEmailLoading(true);
+    try {
+      // Get recipient emails based on selection
+      let recipientEmails: string[] = [];
+
+      if (emailRecipients === "registered") {
+        recipientEmails = registeredUsers
+          .map((reg) => reg.user?.email)
+          .filter(Boolean) as string[];
+      } else if (emailRecipients === "waitlist") {
+        recipientEmails = waitlistedUsers
+          .map((reg) => reg.user?.email)
+          .filter(Boolean) as string[];
+      } else {
+        // both
+        recipientEmails = [
+          ...registeredUsers.map((reg) => reg.user?.email),
+          ...waitlistedUsers.map((reg) => reg.user?.email),
+        ].filter(Boolean) as string[];
+      }
+
+      if (recipientEmails.length === 0) {
+        message.warning("No recipients found for the selected group.");
+        return;
+      }
+
+      // Create subject with session information
+      const sessionDate = dayjs(selectedSession.date).format("MMMM D, YYYY");
+      const sessionTime = dayjs(`1970-01-01T${selectedSession.time}`).format(
+        "h:mm A"
+      );
+      const enhancedSubject = `${values.subject} - ${selectedSession.name} - ${sessionDate} at ${selectedSession.location}`;
+
+      await sendBulkAnnouncement({
+        emails: recipientEmails,
+        header: values.header,
+        subject: enhancedSubject,
+        body: values.body,
+      });
+
+      message.success(
+        `Email sent successfully to ${recipientEmails.length} recipient(s)!`
+      );
+      emailForm.resetFields();
+    } catch (error: any) {
+      console.error("Failed to send email:", error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        "Failed to send email. Please try again.";
+      message.error(errorMessage);
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const handleEmailRecipientsChange = (
+    value: "registered" | "waitlist" | "both"
+  ) => {
+    setEmailRecipients(value);
   };
 
   useEffect(() => {
@@ -711,34 +794,40 @@ const Sessions: FC = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Sessions Management</h1>
-        <div className="flex gap-4 items-center">
-          <Select
-            placeholder="Filter by status"
-            allowClear
-            style={{ width: 150 }}
-            onChange={handleStatusFilter}
-            value={statusFilter}
-          >
-            <Option value={SessionStatus.OPEN}>Open</Option>
-            <Option value={SessionStatus.FULL}>Full</Option>
-            <Option value={SessionStatus.VIEW_ONLY}>View Only</Option>
-            <Option value={SessionStatus.CLOSED}>Closed</Option>
-          </Select>
+      <h1 className="text-3xl font-bold mb-8 text-gray-800 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+        Sessions Management
+      </h1>
+
+      <div className="backdrop-blur-xl bg-white/60 rounded-3xl shadow-2xl border border-white/30 p-6 mb-6">
+        <div className="flex justify-between items-center">
+          <div className="flex gap-4 items-center">
+            <Select
+              placeholder="Filter by status"
+              allowClear
+              style={{ width: 150 }}
+              onChange={handleStatusFilter}
+              value={statusFilter}
+              className="[&_.ant-select-selector]:bg-white/70 [&_.ant-select-selector]:backdrop-blur-md [&_.ant-select-selector]:border-white/30 [&_.ant-select-selector]:rounded-xl [&_.ant-select-focused_.ant-select-selector]:bg-white/90 [&_.ant-select-focused_.ant-select-selector]:border-purple-500/50 [&_.ant-select-focused_.ant-select-selector]:shadow-lg [&_.ant-select-focused_.ant-select-selector]:shadow-purple-500/20"
+            >
+              <Option value={SessionStatus.OPEN}>Open</Option>
+              <Option value={SessionStatus.FULL}>Full</Option>
+              <Option value={SessionStatus.VIEW_ONLY}>View Only</Option>
+              <Option value={SessionStatus.CLOSED}>Closed</Option>
+            </Select>
+          </div>
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            className="bg-nyu-purple hover:!bg-nyu-purple-light"
             size="large"
             onClick={handleCreateSession}
+            className="bg-gradient-to-r from-purple-500 to-blue-500 border-none rounded-xl shadow-lg shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/40"
           >
             Create Session
           </Button>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg p-6">
+      <div className="backdrop-blur-xl bg-white/60 rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
         <Table
           columns={columns}
           dataSource={sessions}
@@ -750,10 +839,13 @@ const Sessions: FC = () => {
             onClick: () => handleSessionClick(record),
             style: { cursor: "pointer" },
           })}
+          className="glass-table"
         />
+      </div>
 
-        {total > pageSize && (
-          <div className="flex justify-center mt-6">
+      {total > pageSize && (
+        <div className="flex justify-center mt-6">
+          <div className="backdrop-blur-xl bg-white/60 rounded-2xl shadow-2xl border border-white/30 p-4 [&_.ant-pagination-item]:bg-white/70 [&_.ant-pagination-item]:backdrop-blur-md [&_.ant-pagination-item]:border-white/30 [&_.ant-pagination-item]:rounded-lg [&_.ant-pagination-item:hover]:bg-white/90 [&_.ant-pagination-item-active]:bg-gradient-to-r [&_.ant-pagination-item-active]:from-purple-500 [&_.ant-pagination-item-active]:to-blue-500 [&_.ant-pagination-item-active]:border-transparent [&_.ant-pagination-item-active]:text-white [&_.ant-pagination-item-active_a]:text-white">
             <Pagination
               current={currentPage}
               total={total}
@@ -765,8 +857,8 @@ const Sessions: FC = () => {
               }
             />
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Create Session Modal */}
       <Modal
@@ -1112,6 +1204,124 @@ const Sessions: FC = () => {
                 rowKey="id"
                 size="small"
               />
+            </TabPane>
+            <TabPane
+              tab={
+                <span>
+                  <MailOutlined /> Email
+                </span>
+              }
+              key="email"
+            >
+              <div className="mb-4 backdrop-blur-xl bg-purple-50/80 rounded-2xl border border-purple-200/50 p-4">
+                <div className="text-purple-800">
+                  <strong className="text-lg">
+                    📧 Send Announcement Email
+                  </strong>
+                  <div className="text-sm mt-2 text-gray-600">
+                    Send a custom email announcement to users registered for
+                    this session. The header appears below the NYU Tennis Club
+                    banner, and the subject will automatically include session
+                    details.
+                  </div>
+                </div>
+              </div>
+
+              <div className="backdrop-blur-xl bg-white/60 rounded-2xl shadow-2xl border border-white/30 p-6 mb-4 [&_.ant-radio-wrapper]:bg-white/50 [&_.ant-radio-wrapper]:backdrop-blur-md [&_.ant-radio-wrapper]:border-white/30 [&_.ant-radio-wrapper]:rounded-lg [&_.ant-radio-wrapper]:p-3 [&_.ant-radio-wrapper]:m-1 [&_.ant-radio-wrapper:hover]:bg-white/70 [&_.ant-input]:bg-white/70 [&_.ant-input]:backdrop-blur-md [&_.ant-input]:border-white/30 [&_.ant-input]:rounded-xl [&_.ant-input]:focus:bg-white/90 [&_.ant-input]:focus:border-purple-500/50 [&_.ant-input]:focus:shadow-lg [&_.ant-input]:focus:shadow-purple-500/20 [&_.ant-btn-primary]:bg-gradient-to-r [&_.ant-btn-primary]:from-purple-500 [&_.ant-btn-primary]:to-blue-500 [&_.ant-btn-primary]:border-none [&_.ant-btn-primary]:rounded-xl [&_.ant-btn-primary]:shadow-lg [&_.ant-btn-primary]:shadow-purple-500/30 [&_.ant-btn-primary]:transition-all [&_.ant-btn-primary]:duration-300 [&_.ant-btn-primary:hover]:-translate-y-1 [&_.ant-btn-primary:hover]:shadow-xl [&_.ant-btn-primary:hover]:shadow-purple-500/40">
+                <div className="mb-4">
+                  <strong>Recipients:</strong>
+                  <Radio.Group
+                    value={emailRecipients}
+                    onChange={(e) =>
+                      handleEmailRecipientsChange(e.target.value)
+                    }
+                    className="ml-4"
+                  >
+                    <Radio value="registered">
+                      Registered Users ({registeredUsers.length})
+                    </Radio>
+                    <Radio value="waitlist">
+                      Waitlisted Users ({waitlistedUsers.length})
+                    </Radio>
+                    <Radio value="both">
+                      Both Registered & Waitlisted (
+                      {registeredUsers.length + waitlistedUsers.length})
+                    </Radio>
+                  </Radio.Group>
+                </div>
+
+                <Form
+                  form={emailForm}
+                  onFinish={handleEmailSubmit}
+                  layout="vertical"
+                >
+                  <Form.Item
+                    name="header"
+                    label="Email Header"
+                    rules={[
+                      { required: true, message: "Please enter email header" },
+                      {
+                        max: 100,
+                        message: "Header cannot exceed 100 characters",
+                      },
+                    ]}
+                  >
+                    <Input placeholder="e.g., Important Session Announcement!" />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="subject"
+                    label="Subject"
+                    rules={[
+                      { required: true, message: "Please enter email subject" },
+                    ]}
+                  >
+                    <Input
+                      placeholder="e.g., Important Session Update"
+                      suffix={
+                        <span className="text-gray-400 text-xs">
+                          + session details will be added
+                        </span>
+                      }
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="body"
+                    label="Message Body"
+                    rules={[
+                      { required: true, message: "Please enter email message" },
+                    ]}
+                  >
+                    <TextArea
+                      placeholder="Enter your announcement message here..."
+                      rows={6}
+                      showCount
+                      maxLength={2000}
+                    />
+                  </Form.Item>
+
+                  <Form.Item>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={emailLoading}
+                      disabled={
+                        (emailRecipients === "registered" &&
+                          registeredUsers.length === 0) ||
+                        (emailRecipients === "waitlist" &&
+                          waitlistedUsers.length === 0) ||
+                        (emailRecipients === "both" &&
+                          registeredUsers.length + waitlistedUsers.length === 0)
+                      }
+                      icon={<MailOutlined />}
+                      className="bg-nyu-purple hover:!bg-nyu-purple-light"
+                    >
+                      Send Email
+                    </Button>
+                  </Form.Item>
+                </Form>
+              </div>
             </TabPane>
           </Tabs>
         </div>
