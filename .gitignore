@@ -27,3 +27,4 @@ dist-ssr
 
 # Sync fork workflow files
 .github/workflows/sync-fork*.yml
+.github/workflows/sync-fork-dev.yml
