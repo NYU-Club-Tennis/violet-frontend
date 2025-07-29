@@ -1,10 +1,13 @@
 import React, { FC, useState } from "react";
-import { Card, Button, Tag, Typography, Modal, Space } from "antd";
+import { Card, Button, Tag, Typography, Modal, Space, message } from "antd";
 import { ISession } from "interfaces/session.interface";
 import { ButtonProps } from "antd/lib/button";
 import { LEVELS } from "../../constants/enum/levels.enum";
 import { IRegistration } from "interfaces/registration.interface";
 import { RegistrationStatus } from "constants/enum/registration.status.enum";
+import { createRegistration, deleteRegistration } from "actions/registration.action";
+import { AuthStore } from "stores/auth.store";
+import axios from "axios";
 
 const { Text, Title, Paragraph } = Typography;
 
@@ -12,14 +15,18 @@ interface SessionCardProps {
   session: ISession;
   isLoggedIn: boolean;
   registration?: IRegistration | null;
+  onRegistrationChange?: () => void;
 }
 
 const SessionCard: FC<SessionCardProps> = ({
   session,
   isLoggedIn,
   registration,
+  onRegistrationChange,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = AuthStore();
 
   const isRegistered = !!registration;
   const isWaitlisted = registration?.status === RegistrationStatus.WAITLISTED;
@@ -38,9 +45,14 @@ const SessionCard: FC<SessionCardProps> = ({
     const grayClassName =
       "!bg-gray-400 !border-gray-400 hover:!bg-gray-500 hover:!border-gray-500";
 
+    const baseProps = {
+      loading: isLoading,
+    };
+
     // If not logged in, show login button
     if (!isLoggedIn) {
       return {
+        ...baseProps,
         children: "Log in",
         type: "primary",
         disabled: false,
@@ -52,12 +64,14 @@ const SessionCard: FC<SessionCardProps> = ({
     switch (session.status) {
       case "CLOSED":
         return {
+          ...baseProps,
           children: "Closed",
           disabled: true,
           type: "default",
         };
       case "VIEW_ONLY":
         return {
+          ...baseProps,
           children: "View Only",
           disabled: true,
           type: "default",
@@ -85,6 +99,7 @@ const SessionCard: FC<SessionCardProps> = ({
         // If user is actively registered or waitlisted, show unregister button
         if (isActiveRegistration || isWaitlisted) {
           return {
+            ...baseProps,
             children: isWaitlisted ? "Leave Waitlist" : "Unregister",
             type: "primary",
             disabled: false,
@@ -98,6 +113,7 @@ const SessionCard: FC<SessionCardProps> = ({
         if (isModalButton) {
           if (session.spotsAvailable === 0) {
             return {
+              ...baseProps,
               children: "Join Waitlist",
               type: "primary",
               disabled: false,
@@ -106,6 +122,7 @@ const SessionCard: FC<SessionCardProps> = ({
             };
           }
           return {
+            ...baseProps,
             children: "Register for Session",
             type: "primary",
             disabled: false,
@@ -117,6 +134,7 @@ const SessionCard: FC<SessionCardProps> = ({
         // For card button, show shorter text
         if (session.spotsAvailable === 0) {
           return {
+            ...baseProps,
             children: "Join Waitlist",
             type: "primary",
             disabled: false,
@@ -125,6 +143,7 @@ const SessionCard: FC<SessionCardProps> = ({
           };
         }
         return {
+          ...baseProps,
           children: "Register",
           type: "primary",
           disabled: false,
@@ -151,7 +170,107 @@ const SessionCard: FC<SessionCardProps> = ({
     setIsModalOpen(true);
   };
 
-  const handleModalButtonClick = () => {};
+  const handleRegister = async () => {
+    if (!user?.id) {
+      message.error("Please log in to register for sessions");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await createRegistration({
+        userId: user.id,
+        sessionId: session.id,
+      });
+
+      if (response.data.position === 0) {
+        message.success("Successfully registered for the session!");
+      } else {
+        message.success(`Added to waitlist at position ${response.data.position}`);
+      }
+
+      setIsModalOpen(false);
+      onRegistrationChange?.();
+    } catch (error) {
+      console.error("Registration failed:", error);
+      
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const errorMessage = error.response?.data?.message || "Registration failed";
+        
+        switch (status) {
+          case 400:
+            if (errorMessage.toLowerCase().includes("already registered")) {
+              message.error("You are already registered for this session");
+            } else if (errorMessage.toLowerCase().includes("session not found")) {
+              message.error("Session not found");
+            } else if (errorMessage.toLowerCase().includes("session closed")) {
+              message.error("This session is closed for registration");
+            } else {
+              message.error(errorMessage);
+            }
+            break;
+          case 401:
+            message.error("Your session has expired. Please log in again");
+            break;
+          default:
+            message.error("Failed to register for session. Please try again");
+        }
+      } else {
+        message.error("Failed to register for session. Please try again");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUnregister = async () => {
+    if (!registration?.id) {
+      message.error("Registration not found");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await deleteRegistration(registration.id);
+      message.success("Successfully unregistered from the session");
+      setIsModalOpen(false);
+      onRegistrationChange?.();
+    } catch (error) {
+      console.error("Unregistration failed:", error);
+      
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        switch (status) {
+          case 401:
+            message.error("Your session has expired. Please log in again");
+            break;
+          case 404:
+            message.error("Registration not found");
+            break;
+          default:
+            message.error("Failed to unregister from session. Please try again");
+        }
+      } else {
+        message.error("Failed to unregister from session. Please try again");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleModalButtonClick = () => {
+    if (!isLoggedIn) {
+      message.info("Please log in to register for sessions");
+      return;
+    }
+
+    if (isRegistered) {
+      handleUnregister();
+    } else {
+      handleRegister();
+    }
+  };
 
   const renderRegistrationStatus = () => {
     if (!isRegistered) return null;
@@ -253,7 +372,16 @@ const SessionCard: FC<SessionCardProps> = ({
             <Button
               {...getButtonProps(false)}
               block
-              onClick={(e) => handleCardClick()}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isLoggedIn) {
+                  message.info("Please log in to register for sessions");
+                } else if (isRegistered) {
+                  handleUnregister();
+                } else {
+                  handleRegister();
+                }
+              }}
             />
           </div>
         </div>
@@ -274,7 +402,7 @@ const SessionCard: FC<SessionCardProps> = ({
               type="primary"
               size="large"
               {...getButtonProps(true)}
-              onClick={(e) => console.log("hello")}
+              onClick={handleModalButtonClick}
             />
           </>,
         ]}

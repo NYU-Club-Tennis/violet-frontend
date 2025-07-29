@@ -1,10 +1,19 @@
 import {
   IRegistrationWithUser,
   ISessionRegistrationsResponse,
+  ICreateRegistration,
+  IRegistration,
 } from "interfaces/registration.interface";
 import { fetch } from "../utils/fetch.util";
 
 const url = "registration";
+
+export const createRegistration = (payload: ICreateRegistration) => {
+  const method = "POST";
+  const path = `${url}`;
+
+  return fetch<IRegistration>(method, path, payload);
+};
 
 export const getSessionRegistrationsWithUsers = (sessionId: number) => {
   const method = "GET";
@@ -35,4 +44,11 @@ export const markAttendance = (
   const path = `${url}/${registrationId}/attendance`;
 
   return fetch<IRegistrationWithUser>(method, path, { hasAttended });
+};
+
+export const deleteRegistration = (registrationId: number) => {
+  const method = "DELETE";
+  const path = `${url}/${registrationId}`;
+
+  return fetch(method, path);
 };
