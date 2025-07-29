@@ -5,7 +5,10 @@ import { ButtonProps } from "antd/lib/button";
 import { LEVELS } from "../../constants/enum/levels.enum";
 import { IRegistration } from "interfaces/registration.interface";
 import { RegistrationStatus } from "constants/enum/registration.status.enum";
-import { createRegistration, deleteRegistration } from "actions/registration.action";
+import {
+  createRegistration,
+  deleteRegistration,
+} from "actions/registration.action";
 import { AuthStore } from "stores/auth.store";
 import axios from "axios";
 
@@ -186,23 +189,28 @@ const SessionCard: FC<SessionCardProps> = ({
       if (response.data.position === 0) {
         message.success("Successfully registered for the session!");
       } else {
-        message.success(`Added to waitlist at position ${response.data.position}`);
+        message.success(
+          `Added to waitlist at position ${response.data.position}`
+        );
       }
 
       setIsModalOpen(false);
       onRegistrationChange?.();
     } catch (error) {
       console.error("Registration failed:", error);
-      
+
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
-        const errorMessage = error.response?.data?.message || "Registration failed";
-        
+        const errorMessage =
+          error.response?.data?.message || "Registration failed";
+
         switch (status) {
           case 400:
             if (errorMessage.toLowerCase().includes("already registered")) {
               message.error("You are already registered for this session");
-            } else if (errorMessage.toLowerCase().includes("session not found")) {
+            } else if (
+              errorMessage.toLowerCase().includes("session not found")
+            ) {
               message.error("Session not found");
             } else if (errorMessage.toLowerCase().includes("session closed")) {
               message.error("This session is closed for registration");
@@ -238,7 +246,7 @@ const SessionCard: FC<SessionCardProps> = ({
       onRegistrationChange?.();
     } catch (error) {
       console.error("Unregistration failed:", error);
-      
+
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
         switch (status) {
@@ -249,7 +257,9 @@ const SessionCard: FC<SessionCardProps> = ({
             message.error("Registration not found");
             break;
           default:
-            message.error("Failed to unregister from session. Please try again");
+            message.error(
+              "Failed to unregister from session. Please try again"
+            );
         }
       } else {
         message.error("Failed to unregister from session. Please try again");
