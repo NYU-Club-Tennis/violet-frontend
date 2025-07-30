@@ -65,22 +65,26 @@ const Login = () => {
   };
 
   return (
-    <div className="bg-nyu-purple-light w-screen h-screen flex flex-col items-center justify-center">
-      <div className="w-[600px] h-[600px] bg-white flex flex-col items-center py-20 gap-9 px-28 shadow-2xl">
-        <img src={logo} alt="logo" className="w-24 h-auto" />
+    <div className="bg-nyu-purple-light w-screen h-screen flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white flex flex-col items-center py-8 sm:py-12 gap-6 sm:gap-9 px-6 sm:px-8 shadow-2xl rounded-lg">
+        <img src={logo} alt="logo" className="w-20 sm:w-24 h-auto" />
         <div className="w-full flex flex-col gap-1">
           <Form
             form={form}
             layout="vertical"
             requiredMark={false}
             onFieldsChange={() => setIsError(false)}
-            className="w-full flex flex-col items-center gap-1"
+            className="w-full flex flex-col items-center gap-4 sm:gap-6"
             onFinish={handleSubmit}
           >
             <Form.Item
               name="email"
               required
-              label={<span className="font-nyu-perstare-condensed">Email</span>}
+              label={
+                <span className="font-nyu-perstare-condensed text-sm sm:text-base">
+                  Email
+                </span>
+              }
               rules={[
                 { required: true, message: "" },
                 {
@@ -98,22 +102,34 @@ const Login = () => {
               validateStatus={isError ? "error" : ""}
               className="w-full"
             >
-              <Input />
+              <Input size="large" className="h-10 sm:h-9" />
             </Form.Item>
 
             <Form.Item
               name="password"
               required
               label={
-                <span className="font-nyu-perstare-condensed">Password</span>
+                <span className="font-nyu-perstare-condensed text-sm sm:text-base">
+                  Password
+                </span>
               }
               rules={[{ required: true, message: "" }]}
               validateTrigger="onChange"
               validateStatus={isError ? "error" : ""}
               className="w-full"
             >
-              <Input.Password />
+              <Input.Password size="large" className="h-10 sm:h-9" />
             </Form.Item>
+
+            <div className="w-full flex justify-end">
+              <Button
+                type="link"
+                onClick={() => navigate("/forgot-password")}
+                className="text-nyu-purple-light hover:!text-nyu-purple-light/80 p-0 h-auto text-sm font-nyu-perstare-condensed"
+              >
+                Forgot Password?
+              </Button>
+            </div>
 
             <Form.Item shouldUpdate>
               {() => (
@@ -127,7 +143,8 @@ const Login = () => {
                       .getFieldsError()
                       .filter(({ errors }) => errors.length).length
                   }
-                  className="h-9 w-44 bg-nyu-purple-light text-white"
+                  className="h-10 sm:h-9 w-full sm:w-44 bg-nyu-purple-light text-white"
+                  size="large"
                 >
                   Log in
                 </Button>
@@ -136,7 +153,8 @@ const Login = () => {
             <Button
               color="purple"
               onClick={() => navigate("/signup")}
-              className="h-9 w-44 text-nyu-purple-light border-0 shadow-none"
+              className="h-10 sm:h-9 w-full sm:w-44 text-nyu-purple-light border-0 shadow-none"
+              size="large"
             >
               Sign Up
             </Button>

@@ -17,6 +17,8 @@ import Users from "pages/Bof/Users/Users";
 import Sessions from "pages/Bof/Sessions/Sessions";
 import Email from "pages/Bof/Email/Email";
 import Settings from "pages/Bof/Settings/Settings";
+import ForgotPassword from "pages/ForgotPassword/ForgotPassword";
+import ResetPassword from "pages/ResetPassword/ResetPassword";
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/create-profile" element={<CreateProfile />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Back Office Routes */}
           <Route path="/bof" element={<BofLayout />}>
