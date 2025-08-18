@@ -2,6 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ant Design Primary Button Override */
+.ant-btn-primary {
+  background-color: #57068c !important;
+  border-color: #57068c !important;
+  color: #ffffff !important;
+}
+
+.ant-btn-primary:hover {
+  background-color: #ffffff !important;
+  border-color: #57068c !important;
+  color: #000000 !important;
+}
+
+.ant-btn-primary:focus {
+  background-color: #57068c !important;
+  border-color: #57068c !important;
+  color: #ffffff !important;
+}
+
+.ant-btn-primary:active {
+  background-color: #57068c !important;
+  border-color: #57068c !important;
+  color: #ffffff !important;
+}
+
+/* Ant Design CSS Custom Properties Override */
+:root {
+  --ant-primary-color: #57068c;
+  --ant-primary-color-hover: #ffffff;
+  --ant-primary-color-active: #57068c;
+  --ant-primary-color-outline: #57068c;
+  --ant-primary-1: #57068c;
+  --ant-primary-2: #57068c;
+  --ant-primary-3: #57068c;
+  --ant-primary-4: #57068c;
+  --ant-primary-5: #57068c;
+  --ant-primary-6: #57068c;
+  --ant-primary-7: #57068c;
+  --ant-primary-8: #57068c;
+  --ant-primary-9: #57068c;
+  --ant-primary-10: #57068c;
+}
+
 /* NYU Perstare Font Family - Regular */
 @font-face {
   font-family: "NYU Perstare";

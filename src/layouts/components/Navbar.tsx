@@ -37,11 +37,11 @@ const Navbar: React.FC = () => {
       label: "Join",
       onClick: () => handleTabChange(PAGE_TYPE.JOIN),
     },
-    {
-      key: PAGE_TYPE.QUESTIONS,
-      label: "Questions",
-      onClick: () => handleTabChange(PAGE_TYPE.QUESTIONS),
-    },
+    // {
+    //   key: PAGE_TYPE.QUESTIONS,
+    //   label: "Questions",
+    //   onClick: () => handleTabChange(PAGE_TYPE.QUESTIONS),
+    // },
     {
       key: user && token ? PAGE_TYPE.PROFILE : PAGE_TYPE.SIGNUP,
       label: user && token ? "Profile" : "Sign Up/Log in",
@@ -71,7 +71,7 @@ const Navbar: React.FC = () => {
             <Join />
           ) : item.key === PAGE_TYPE.QUESTIONS ? (
             <Questions />
-          ) : user && token && item.key === PAGE_TYPE.PROFILE ? (
+          ) : item.key === PAGE_TYPE.PROFILE ? (
             <Profile />
           ) : null
         ) : null,

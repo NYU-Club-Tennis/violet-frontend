@@ -1,28 +1,30 @@
 import { Button, Form, Input, Modal } from "antd";
 import { purpleAthleticLogoText as logo } from "assets";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { userSignUp } from "actions/auth.action";
-import { AuthStore } from "stores/auth.store";
+import { forgotPassword } from "actions/auth.action";
+import { userExists } from "actions/user.action";
 
-const SignUp = () => {
+const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = AuthStore();
   const [isError, setIsError] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (user) {
-      navigate("/");
-    }
-  }, [user]);
 
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
       const value = await form.validateFields();
-      const { status, data } = await userSignUp(value.email);
+
+      // 1) Check if the email exists
+      const existsResp = await userExists(value.email);
+      if (!existsResp?.data?.exists) {
+        handleShowEmailNotFoundModal();
+        return;
+      }
+
+      // 2) Proceed with forgot password
+      const { status, data } = await forgotPassword(value.email);
 
       if (status >= 200 && status < 300 && data) {
         handleShowEmailSentModal();
@@ -31,9 +33,9 @@ const SignUp = () => {
       console.error("error handleSubmit", error);
       const errorMessage = error?.response?.data?.message;
 
-      if (errorMessage?.includes("already exists")) {
-        handleShowEmailTakenModal();
-      } else if (errorMessage?.includes("Too many verification attempts")) {
+      if (errorMessage?.includes("not found")) {
+        handleShowEmailNotFoundModal();
+      } else if (errorMessage?.includes("Too many attempts")) {
         handleShowRateLimitModal();
       } else if (errorMessage?.includes("Please wait")) {
         handleShowCooldownModal(errorMessage);
@@ -45,10 +47,11 @@ const SignUp = () => {
     }
   };
 
-  const handleShowEmailTakenModal = () => {
+  const handleShowEmailNotFoundModal = () => {
     Modal.error({
-      title: "Email already in use",
-      content: "Please use a different email address",
+      title: "Email not found",
+      content:
+        "No account found with this email address. Please check your email and try again.",
       centered: true,
       okText: "Ok",
       okButtonProps: {
@@ -61,9 +64,9 @@ const SignUp = () => {
 
   const handleShowEmailSentModal = () => {
     const modal = Modal.success({
-      title: "Verification Email Sent!",
+      title: "Password Reset Email Sent!",
       content:
-        "A verification link has been sent to your email. Please check your inbox and click the link to continue.",
+        "A password reset link has been sent to your email. Please check your inbox and click the link to reset your password.",
       centered: true,
       okText: "Back to login",
       okButtonProps: {
@@ -83,7 +86,7 @@ const SignUp = () => {
     Modal.error({
       title: "Too Many Attempts",
       content:
-        "You've reached the maximum number of verification attempts. Please try again in an hour.",
+        "You've reached the maximum number of password reset attempts. Please try again in an hour.",
       centered: true,
       okText: "Ok",
       okButtonProps: {
@@ -114,8 +117,12 @@ const SignUp = () => {
         <img src={logo} alt="logo" className="w-20 sm:w-24 h-auto" />
         <div className="w-full flex flex-col gap-1">
           <div className="font-nyu-perstare-condensed pl-1 mb-2 text-lg sm:text-xl">
-            Sign up
+            Forgot Password
           </div>
+          <p className="text-gray-600 text-sm mb-4 leading-relaxed pl-1">
+            Enter your email address and we'll send you a link to reset your
+            password.
+          </p>
           <Form
             form={form}
             requiredMark={false}
@@ -164,7 +171,7 @@ const SignUp = () => {
                   className="h-10 sm:h-9 w-full sm:w-44 bg-nyu-purple-light text-white enabled:hover:!bg-white enabled:hover:!text-nyu-purple-light enabled:transition-colors enabled:!border-nyu-purple-light"
                   size="large"
                 >
-                  Register
+                  Send Reset Link
                 </Button>
               )}
             </Form.Item>
@@ -174,7 +181,7 @@ const SignUp = () => {
               className="h-10 sm:h-9 w-full sm:w-44 text-nyu-purple-light border-0 shadow-none"
               size="large"
             >
-              Log in
+              Back to Login
             </Button>
           </Form>
         </div>
@@ -183,4 +190,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default ForgotPassword;
