@@ -42,8 +42,7 @@ const SessionCard: FC<SessionCardProps> = ({
   const getButtonProps = (
     isModalButton = false
   ): ButtonProps & { className?: string } => {
-    const baseClassName =
-      "!bg-nyu-purple !border-nyu-purple hover:!bg-nyu-purple-light hover:!border-nyu-purple-light";
+    const baseClassName = "!bg-nyu-purple !border-nyu-purple ";
 
     const grayClassName =
       "!bg-gray-400 !border-gray-400 hover:!bg-gray-500 hover:!border-gray-500";

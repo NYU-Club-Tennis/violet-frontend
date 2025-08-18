@@ -1,6 +1,7 @@
 import React from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "./components/ThemeProvider";
 import Home from "pages/Home/Home";
 import AppLayout from "layouts/AppLayout";
 import HomeLayout from "layouts/HomeLayout";
@@ -22,31 +23,33 @@ import ResetPassword from "pages/ResetPassword/ResetPassword";
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppLayout>
-        <Routes>
-          <Route path="/welcome" element={<Welcome />} />
-          <Route path="/" element={<HomeLayout />}></Route>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/create-profile" element={<CreateProfile />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+    <ThemeProvider>
+      <BrowserRouter>
+        <AppLayout>
+          <Routes>
+            <Route path="/welcome" element={<Welcome />} />
+            <Route path="/" element={<HomeLayout />}></Route>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/create-profile" element={<CreateProfile />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Back Office Routes */}
-          <Route path="/bof" element={<BofLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="users" element={<Users />} />
-            <Route path="sessions" element={<Sessions />} />
-            <Route path="email" element={<Email />} />
-            <Route path="settings" element={<Settings />} />
-          </Route>
+            {/* Back Office Routes */}
+            <Route path="/bof" element={<BofLayout />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="users" element={<Users />} />
+              <Route path="sessions" element={<Sessions />} />
+              <Route path="email" element={<Email />} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/welcome" replace />} />
-        </Routes>
-      </AppLayout>
-    </BrowserRouter>
+            <Route path="*" element={<Navigate to="/welcome" replace />} />
+          </Routes>
+        </AppLayout>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

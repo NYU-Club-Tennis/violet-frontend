@@ -3,6 +3,7 @@ import { purpleAthleticLogoText as logo } from "assets";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { forgotPassword } from "actions/auth.action";
+import { userExists } from "actions/user.action";
 
 const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +15,15 @@ const ForgotPassword = () => {
     setIsLoading(true);
     try {
       const value = await form.validateFields();
+
+      // 1) Check if the email exists
+      const existsResp = await userExists(value.email);
+      if (!existsResp?.data?.exists) {
+        handleShowEmailNotFoundModal();
+        return;
+      }
+
+      // 2) Proceed with forgot password
       const { status, data } = await forgotPassword(value.email);
 
       if (status >= 200 && status < 300 && data) {

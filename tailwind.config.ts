@@ -7,6 +7,9 @@ export default {
         "nyu-purple": "#57068c",
         "nyu-purple-light": "#87189D",
         "nyu-blue": "#0f2d5e",
+        // Primary and secondary colors for Ant Design theme
+        primary: "#57068c",
+        secondary: "#0f2d5e",
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
@@ -64,3 +67,17 @@ export default {
   },
   plugins: [],
 };
+
+// Export colors for use in other files
+export const themeColors = {
+  primary: "#57068c",
+  secondary: "#0f2d5e",
+  purple: "#57068c",
+  purpleLight: "#87189D",
+  blue: "#0f2d5e",
+  // Ant Design theme colors
+  success: "#52c41a",
+  warning: "#faad14",
+  error: "#ff4d4f",
+  info: "#0f2d5e",
+} as const;

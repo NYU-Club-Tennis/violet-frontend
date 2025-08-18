@@ -54,3 +54,16 @@ export const resetPassword = (
 
   return fetch<{ success: boolean }>(method, path, { email, password, token });
 };
+
+export const changePassword = (
+  currentPassword: string,
+  newPassword: string
+) => {
+  const method = "POST";
+  const path = `${url}/change-password`;
+
+  return fetch<{ success: boolean }>(method, path, {
+    currentPassword,
+    newPassword,
+  });
+};
