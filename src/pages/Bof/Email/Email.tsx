@@ -302,21 +302,7 @@ const Email: FC = () => {
                     [&_.ant-checkbox-wrapper]:rounded-lg 
                     [&_.ant-checkbox-wrapper]:p-3 
                     [&_.ant-checkbox-wrapper]:m-1 
-                    [&_.ant-checkbox-wrapper:hover]:bg-white/70 
-                    
-                    /* Primary Buttons */
-                    [&_.ant-btn-primary]:bg-gradient-to-r 
-                    [&_.ant-btn-primary]:from-purple-500
-                    [&_.ant-btn-primary]:to-blue-500 
-                    [&_.ant-btn-primary]:border-none 
-                    [&_.ant-btn-primary]:rounded-xl 
-                    [&_.ant-btn-primary]:shadow-lg 
-                    [&_.ant-btn-primary]:shadow-purple-500/30 
-                    [&_.ant-btn-primary]:transition-all 
-                    [&_.ant-btn-primary]:duration-300 
-                    [&_.ant-btn-primary:hover]:-translate-y-1 
-                    [&_.ant-btn-primary:hover]:shadow-xl
-                    [&_.ant-btn-primary:hover]:shadow-purple-500/40"
+                    [&_.ant-checkbox-wrapper:hover]:bg-white/70"
         >
           {/* Recipients Section */}
           <div className="mb-6">
@@ -574,7 +560,11 @@ const Email: FC = () => {
               disabled={selectedRoles.length === 0 && manualEmails.length === 0}
               icon={<MailOutlined />}
               size="large"
-              className="!text-white [&_span]:!text-white [&_.anticon]:!text-white"
+              className="!bg-gradient-to-r !from-purple-500 !to-blue-500 !border-none 
+              !rounded-xl !shadow-lg !shadow-purple-500/30 !transition-all 
+              !duration-300 hover:!-translate-y-1 hover:!shadow-xl 
+              hover:!shadow-purple-500/40 !text-white
+               [&_span]:!text-white [&_.anticon]:!text-white"
             >
               Send Email Announcement
             </Button>

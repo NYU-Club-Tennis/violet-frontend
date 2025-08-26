@@ -93,3 +93,17 @@ export const searchUsers = (searchQuery: string, limit: number = 10) => {
     }>;
   }>(method, path, query);
 };
+
+export const updateUser = (userId: number, userData: Partial<IUser>) => {
+  const method = "PATCH";
+  const path = `${url}/${userId}`;
+
+  return fetch<IUser>(method, path, userData);
+};
+
+export const userExists = (email: string) => {
+  const method = "GET";
+  const path = `${url}/exists`;
+  const query = { email } as any;
+  return fetch<{ exists: boolean }>(method, path, query);
+};

@@ -36,3 +36,34 @@ export const login = (payload: IAuthLoginRequest) => {
 
   return fetch<IAuthUserResponse>(method, path, payload);
 };
+
+export const forgotPassword = (email: string) => {
+  const method = "POST";
+  const path = `${url}/forgot-password`;
+
+  return fetch<{ message: string }>(method, path, { email });
+};
+
+export const resetPassword = (
+  email: string,
+  password: string,
+  token: string
+) => {
+  const method = "POST";
+  const path = `${url}/reset-password`;
+
+  return fetch<{ success: boolean }>(method, path, { email, password, token });
+};
+
+export const changePassword = (
+  currentPassword: string,
+  newPassword: string
+) => {
+  const method = "POST";
+  const path = `${url}/change-password`;
+
+  return fetch<{ success: boolean }>(method, path, {
+    currentPassword,
+    newPassword,
+  });
+};

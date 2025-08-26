@@ -44,3 +44,17 @@ export const deleteSession = (id: number) => {
 
   return fetch<ISession>(method, path);
 };
+
+export const getUserSessions = (userId: number, type: "upcoming" | "past") => {
+  const method = "GET";
+  const path = `${url}/user/${userId}/${type}`;
+
+  return fetch<ISession[]>(method, path);
+};
+
+export const cancelSessionRegistration = (sessionId: number) => {
+  const method = "DELETE";
+  const path = `${url}/${sessionId}/registration`;
+
+  return fetch<{ success: boolean }>(method, path);
+};
