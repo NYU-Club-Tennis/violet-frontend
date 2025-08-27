@@ -107,3 +107,9 @@ export const userExists = (email: string) => {
   const query = { email } as any;
   return fetch<{ exists: boolean }>(method, path, query);
 };
+
+export const updateUserBanStatus = (userId: number, isBanned: boolean) => {
+  const method = "PATCH";
+  const path = `${url}/${userId}/ban-status`;
+  return fetch<IUser>(method, path, { isBanned });
+};

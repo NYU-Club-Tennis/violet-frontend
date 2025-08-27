@@ -18,6 +18,8 @@ import {
   message,
   Radio,
   Card,
+  Collapse,
+  Popconfirm,
 } from "antd";
 import {
   PlusOutlined,
@@ -26,6 +28,8 @@ import {
   UserOutlined,
   CloseOutlined,
   MailOutlined,
+  EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import {
   getSessionPaginate,
@@ -53,6 +57,7 @@ import dayjs from "dayjs";
 const { Option } = Select;
 const { TabPane } = Tabs;
 const { TextArea } = Input;
+const { Panel } = Collapse;
 
 interface CreateSessionFormData {
   name: string;
@@ -95,7 +100,21 @@ const Sessions: FC = () => {
     "registered" | "waitlist" | "both"
   >("registered");
 
+  const [isMobile, setIsMobile] = useState(false);
+
   const pageSize = 10;
+
+  // Check if screen is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const fetchSessions = async (page: number, status?: SessionStatus) => {
     setLoading(true);
@@ -792,15 +811,54 @@ const Sessions: FC = () => {
     },
   ];
 
+  // Mobile-optimized columns - show only essential info
+  const mobileColumns: ColumnsType<ISession> = [
+    {
+      title: "Session Info",
+      key: "sessionInfo",
+      render: (_, record) => (
+        <div className="space-y-1 p-2">
+          {/* Session Name */}
+          <div className="font-semibold text-sm text-gray-800 truncate">
+            {record.name}
+          </div>
+
+          {/* Location */}
+          <div className="flex items-center text-xs text-gray-600">
+            <EnvironmentOutlined className="mr-1 text-purple-500 text-xs" />
+            <span className="truncate">{record.location}</span>
+          </div>
+
+          {/* Date, Time, and Status Row */}
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col min-w-0 flex-1">
+              <div className="font-medium text-xs text-gray-800">
+                {new Date(record.date).toLocaleDateString()}
+              </div>
+              <div className="text-xs text-gray-600">{record.time}</div>
+            </div>
+            <div className="flex flex-col items-end space-y-1 ml-1">
+              <Tag color={getStatusColor(record.status)}>{record.status}</Tag>
+              {isSessionPast(record) && <Tag color="purple">📋</Tag>}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  const [activeTab, setActiveTab] = useState("registered");
+
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-8 text-gray-800 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+    <div className="px-4 sm:px-6 lg:px-8">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8 text-gray-800 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
         Sessions Management
       </h1>
 
-      <div className="backdrop-blur-xl bg-white/60 rounded-3xl shadow-2xl border border-white/30 p-6 mb-6">
-        <div className="flex justify-between items-center">
-          <div className="flex gap-4 items-center">
+      {/* Mobile: Stack controls vertically, Desktop: Side by side */}
+      <div className="backdrop-blur-xl bg-white/60 rounded-2xl sm:rounded-3xl shadow-2xl border border-white/30 p-3 sm:p-6 mb-3 sm:mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:justify-between sm:items-center">
+          <div className="flex gap-3 sm:gap-4 items-center">
             <Select
               placeholder="Filter by status"
               allowClear
@@ -823,7 +881,7 @@ const Sessions: FC = () => {
             className="!bg-gradient-to-r !from-purple-500 !to-blue-500 !border-none 
               !rounded-xl !shadow-lg !shadow-purple-500/30 !transition-all 
               !duration-300 hover:!-translate-y-1 hover:!shadow-xl 
-              hover:!shadow-purple-500/40 !text-white
+              hover:!shadow-purple-500/40 !text-white w-full sm:w-auto
                [&_span]:!text-white [&_.anticon]:!text-white"
           >
             Create Session
@@ -831,34 +889,39 @@ const Sessions: FC = () => {
         </div>
       </div>
 
-      <div className="backdrop-blur-xl bg-white/60 rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
+      {/* Mobile: Use mobile columns, Desktop: Use full columns */}
+      <div className="backdrop-blur-xl bg-white/60 rounded-2xl sm:rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
         <Table
-          columns={columns}
+          columns={isMobile ? mobileColumns : columns}
           dataSource={sessions}
           loading={loading}
           pagination={false}
           rowKey="id"
-          scroll={{ x: 1000 }}
+          scroll={{ x: isMobile ? 250 : 1000 }}
           onRow={(record) => ({
             onClick: () => handleSessionClick(record),
             style: { cursor: "pointer" },
           })}
-          className="glass-table"
+          className={`glass-table ${isMobile ? "overflow-x-hidden" : ""}`}
         />
       </div>
 
       {total > pageSize && (
-        <div className="flex justify-center mt-6">
-          <div className="backdrop-blur-xl bg-white/60 rounded-2xl shadow-2xl border border-white/30 p-4 [&_.ant-pagination-item]:bg-white/70 [&_.ant-pagination-item]:backdrop-blur-md [&_.ant-pagination-item]:border-white/30 [&_.ant-pagination-item]:rounded-lg [&_.ant-pagination-item:hover]:bg-white/90 [&_.ant-pagination-item-active]:bg-gradient-to-r [&_.ant-pagination-item-active]:from-purple-500 [&_.ant-pagination-item-active]:to-blue-500 [&_.ant-pagination-item-active]:border-transparent [&_.ant-pagination-item-active]:text-white [&_.ant-pagination-item-active_a]:text-white">
+        <div className="flex justify-center mt-3 sm:mt-6">
+          <div className="backdrop-blur-xl bg-white/60 rounded-2xl shadow-2xl border border-white/30 p-2 sm:p-4 [&_.ant-pagination-item]:bg-white/70 [&_.ant-pagination-item]:backdrop-blur-md [&_.ant-pagination-item]:border-white/30 [&_.ant-pagination-item]:rounded-lg [&_.ant-pagination-item:hover]:bg-white/90 [&_.ant-pagination-item-active]:bg-gradient-to-r [&_.ant-pagination-item-active]:from-purple-500 [&_.ant-pagination-item-active]:to-blue-500 [&_.ant-pagination-item-active]:border-transparent [&_.ant-pagination-item-active]:text-white [&_.ant-pagination-item-active_a]:text-white">
             <Pagination
               current={currentPage}
               total={total}
               pageSize={pageSize}
               onChange={handlePageChange}
               showSizeChanger={false}
-              showTotal={(total, range) =>
-                `${range[0]}-${range[1]} of ${total} sessions`
+              showTotal={
+                isMobile
+                  ? undefined
+                  : (total, range) =>
+                      `${range[0]}-${range[1]} of ${total} sessions`
               }
+              size={isMobile ? "small" : "default"}
             />
           </div>
         </div>
@@ -1158,176 +1221,620 @@ const Sessions: FC = () => {
         style={{ top: 20 }}
       >
         <div className="mt-4">
-          <Tabs defaultActiveKey="registered">
-            <TabPane
-              tab={`Registered (${registeredUsers.length})`}
-              key="registered"
+          {/* Session Actions - Edit & Delete Buttons */}
+          <div className="mb-4 flex flex-col sm:flex-row gap-3">
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={() => {
+                if (selectedSession) {
+                  handleEditSession(selectedSession);
+                  handleModalClose();
+                }
+              }}
+              className="bg-nyu-purple hover:!bg-nyu-purple-light flex-1 sm:flex-none"
             >
-              <Table
-                columns={registrationColumns}
-                dataSource={registeredUsers}
-                loading={registrationsLoading}
-                pagination={false}
-                rowKey="id"
-                size="small"
-              />
-            </TabPane>
-            <TabPane
-              tab={`Waitlist (${waitlistedUsers.length})`}
-              key="waitlist"
+              Edit Session
+            </Button>
+            <Popconfirm
+              title="Delete Session"
+              description="Are you sure you want to delete this session? This action cannot be undone."
+              onConfirm={() => {
+                if (selectedSession) {
+                  handleDeleteSession(selectedSession);
+                  handleModalClose();
+                }
+              }}
+              okText="Yes, Delete"
+              cancelText="Cancel"
+              okButtonProps={{ danger: true }}
             >
-              <Table
-                columns={waitlistColumns}
-                dataSource={waitlistedUsers}
-                loading={registrationsLoading}
-                pagination={false}
-                rowKey="id"
-                size="small"
-              />
-            </TabPane>
-            <TabPane
-              tab={`Attendance (${registeredUsers.length})`}
-              key="attendance"
-            >
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                <div className="text-blue-800">
-                  <strong>📋 Attendance Management</strong>
-                  <div className="text-sm mt-1">
-                    Mark attendance for users who registered for this session.
-                    {selectedSession && isSessionPast(selectedSession)
-                      ? " No-shows will increment the user's no-show count."
-                      : " This session hasn't occurred yet - you can pre-mark attendance if needed."}
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                className="flex-1 sm:flex-none"
+              >
+                Delete Session
+              </Button>
+            </Popconfirm>
+          </div>
+
+          {/* Mobile: Dropdown tabs, Desktop: Regular tabs */}
+          {isMobile ? (
+            <div className="space-y-4">
+              {/* Mobile Tab Selector */}
+              <Select
+                value={activeTab}
+                onChange={setActiveTab}
+                style={{ width: "100%" }}
+                className="mb-4"
+              >
+                <Option value="registered">
+                  Registered ({registeredUsers.length})
+                </Option>
+                <Option value="waitlist">
+                  Waitlist ({waitlistedUsers.length})
+                </Option>
+                <Option value="attendance">
+                  Attendance ({registeredUsers.length})
+                </Option>
+                <Option value="email">Email</Option>
+              </Select>
+
+              {/* Mobile Tab Content */}
+              {activeTab === "registered" && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-3">
+                    Registered Users
+                  </h4>
+                  <Collapse
+                    ghost
+                    className="[&_.ant-collapse-item]:bg-white/60 [&_.ant-collapse-item]:backdrop-blur-md [&_.ant-collapse-item]:border [&_.ant-collapse-item]:border-white/30 [&_.ant-collapse-item]:rounded-xl [&_.ant-collapse-item]:mb-3 [&_.ant-collapse-header]:text-gray-800 [&_.ant-collapse-header]:font-medium [&_.ant-collapse-content]:bg-white/40 [&_.ant-collapse-content]:backdrop-blur-md [&_.ant-collapse-content]:rounded-b-xl"
+                  >
+                    {registeredUsers.map((registration) => (
+                      <Panel
+                        key={registration.id}
+                        header={
+                          <div className="flex items-center justify-between w-full pr-4">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-gray-900">
+                                {registration.user?.firstName}{" "}
+                                {registration.user?.lastName}
+                              </span>
+                              <span className="text-sm text-gray-600">
+                                {registration.user?.email}
+                              </span>
+                            </div>
+                            <Tag color="green" className="ml-2">
+                              Registered
+                            </Tag>
+                          </div>
+                        }
+                      >
+                        <div className="space-y-3 p-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Phone:</span>
+                            <span className="font-medium">
+                              {registration.user?.phoneNumber || "N/A"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">
+                              No-Show Count:
+                            </span>
+                            <Tag
+                              color={
+                                registration.user?.noShowCount &&
+                                registration.user.noShowCount > 0
+                                  ? "orange"
+                                  : "green"
+                              }
+                            >
+                              {registration.user?.noShowCount || 0}
+                            </Tag>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">
+                              Registration Date:
+                            </span>
+                            <span className="font-medium">
+                              {registration.createdAt
+                                ? new Date(
+                                    registration.createdAt
+                                  ).toLocaleDateString()
+                                : "N/A"}
+                            </span>
+                          </div>
+                        </div>
+                      </Panel>
+                    ))}
+                  </Collapse>
+                </div>
+              )}
+
+              {activeTab === "waitlist" && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-3">Waitlist Users</h4>
+                  <Collapse
+                    ghost
+                    className="[&_.ant-collapse-item]:bg-white/60 [&_.ant-collapse-item]:backdrop-blur-md [&_.ant-collapse-item]:border [&_.ant-collapse-item]:border-white/30 [&_.ant-collapse-item]:rounded-xl [&_.ant-collapse-item]:mb-3 [&_.ant-collapse-header]:text-gray-800 [&_.ant-collapse-header]:font-medium [&_.ant-collapse-content]:bg-white/40 [&_.ant-collapse-content]:backdrop-blur-md [&_.ant-collapse-content]:rounded-b-xl"
+                  >
+                    {waitlistedUsers.map((registration) => (
+                      <Panel
+                        key={registration.id}
+                        header={
+                          <div className="flex items-center justify-between w-full pr-4">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-gray-900">
+                                {registration.user?.firstName}{" "}
+                                {registration.user?.lastName}
+                              </span>
+                              <span className="text-sm text-gray-600">
+                                {registration.user?.email}
+                              </span>
+                            </div>
+                            <Tag color="orange" className="ml-2">
+                              Waitlist
+                            </Tag>
+                          </div>
+                        }
+                      >
+                        <div className="space-y-3 p-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Phone:</span>
+                            <span className="font-medium">
+                              {registration.user?.phoneNumber || "N/A"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">
+                              No-Show Count:
+                            </span>
+                            <Tag
+                              color={
+                                registration.user?.noShowCount &&
+                                registration.user.noShowCount > 0
+                                  ? "orange"
+                                  : "green"
+                              }
+                            >
+                              {registration.user?.noShowCount || 0}
+                            </Tag>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">
+                              Waitlist Date:
+                            </span>
+                            <span className="font-medium">
+                              {registration.createdAt
+                                ? new Date(
+                                    registration.createdAt
+                                  ).toLocaleDateString()
+                                : "N/A"}
+                            </span>
+                          </div>
+                        </div>
+                      </Panel>
+                    ))}
+                  </Collapse>
+                </div>
+              )}
+
+              {activeTab === "attendance" && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-3">
+                    Attendance Management
+                  </h4>
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <div className="text-blue-800">
+                      <strong>📋 Attendance Management</strong>
+                      <div className="text-sm mt-1">
+                        Mark attendance for users who registered for this
+                        session.
+                        {selectedSession && isSessionPast(selectedSession)
+                          ? " No-shows will increment the user's no-show count."
+                          : " This session hasn't occurred yet - you can pre-mark attendance if needed."}
+                      </div>
+                    </div>
                   </div>
+                  <Collapse
+                    ghost
+                    className="[&_.ant-collapse-item]:bg-white/60 [&_.ant-collapse-item]:backdrop-blur-md [&_.ant-collapse-item]:border [&_.ant-collapse-item]:border-white/30 [&_.ant-collapse-item]:rounded-xl [&_.ant-collapse-item]:mb-3 [&_.ant-collapse-header]:text-gray-800 [&_.ant-collapse-header]:font-medium [&_.ant-collapse-content]:bg-white/40 [&_.ant-collapse-content]:backdrop-blur-md [&_.ant-collapse-content]:rounded-b-xl"
+                  >
+                    {registeredUsers.map((registration) => (
+                      <Panel
+                        key={registration.id}
+                        header={
+                          <div className="flex items-center justify-between w-full pr-4">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-gray-900">
+                                {registration.user?.firstName}{" "}
+                                {registration.user?.lastName}
+                              </span>
+                              <span className="text-sm text-gray-600">
+                                {registration.user?.email}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Tag color="green">Registered</Tag>
+                              <Tag
+                                color={
+                                  registration.user?.noShowCount &&
+                                  registration.user.noShowCount > 0
+                                    ? "orange"
+                                    : "green"
+                                }
+                              >
+                                No-Shows: {registration.user?.noShowCount || 0}
+                              </Tag>
+                            </div>
+                          </div>
+                        }
+                      >
+                        <div className="space-y-4 p-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Phone:</span>
+                            <span className="font-medium">
+                              {registration.user?.phoneNumber || "N/A"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Attendance:</span>
+                            <div className="flex space-x-2">
+                              <Button
+                                size="small"
+                                type={
+                                  registration.hasAttended
+                                    ? "primary"
+                                    : "default"
+                                }
+                                onClick={() =>
+                                  handleMarkAttendance(registration.id, true)
+                                }
+                                className={
+                                  registration.hasAttended
+                                    ? "bg-green-500 hover:!bg-green-600"
+                                    : ""
+                                }
+                              >
+                                Present
+                              </Button>
+                              <Button
+                                size="small"
+                                type={
+                                  !registration.hasAttended
+                                    ? "primary"
+                                    : "default"
+                                }
+                                onClick={() =>
+                                  handleMarkAttendance(registration.id, false)
+                                }
+                                className={
+                                  !registration.hasAttended
+                                    ? "bg-red-500 hover:!bg-red-600"
+                                    : ""
+                                }
+                              >
+                                Absent
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </Panel>
+                    ))}
+                  </Collapse>
                 </div>
-              </div>
-              <Table
-                columns={attendanceColumns}
-                dataSource={registeredUsers}
-                loading={registrationsLoading}
-                pagination={false}
-                rowKey="id"
-                size="small"
-              />
-            </TabPane>
-            <TabPane
-              tab={
-                <span>
-                  <MailOutlined /> Email
-                </span>
-              }
-              key="email"
-            >
-              <div className="mb-4 backdrop-blur-xl bg-purple-50/80 rounded-2xl border border-purple-200/50 p-4">
-                <div className="text-purple-800">
-                  <strong className="text-lg">
-                    📧 Send Announcement Email
-                  </strong>
-                  <div className="text-sm mt-2 text-gray-600">
-                    Send a custom email announcement to users registered for
-                    this session. The header appears below the NYU Tennis Club
-                    banner, and the subject will automatically include session
-                    details.
+              )}
+
+              {activeTab === "email" && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-3">Send Email</h4>
+                  <div className="mb-4 backdrop-blur-xl bg-purple-50/80 rounded-2xl border border-purple-200/50 p-4">
+                    <div className="text-purple-800">
+                      <strong className="text-lg">
+                        📧 Send Announcement Email
+                      </strong>
+                      <div className="text-sm mt-2 text-gray-600">
+                        Send a custom email announcement to users registered for
+                        this session. The header appears below the NYU Tennis
+                        Club banner, and the subject will automatically include
+                        session details.
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <div className="backdrop-blur-xl bg-white/60 rounded-2xl shadow-2xl border border-white/30 p-6 mb-4 [&_.ant-radio-wrapper]:bg-white/50 [&_.ant-radio-wrapper]:backdrop-blur-md [&_.ant-radio-wrapper]:border-white/30 [&_.ant-radio-wrapper]:rounded-lg [&_.ant-radio-wrapper]:p-3 [&_.ant-radio-wrapper]:m-1 [&_.ant-radio-wrapper:hover]:bg-white/70 [&_.ant-input]:bg-white/70 [&_.ant-input]:backdrop-blur-md [&_.ant-input]:border-white/30 [&_.ant-input]:rounded-xl [&_.ant-input]:focus:bg-white/90 [&_.ant-input]:focus:border-purple-500/50 [&_.ant-input]:focus:shadow-lg [&_.ant-input]:focus:shadow-purple-500/20 [&_.ant-btn-primary]:bg-gradient-to-r [&_.ant-btn-primary]:from-purple-500 [&_.ant-btn-primary]:to-blue-500 [&_.ant-btn-primary]:border-none [&_.ant-btn-primary]:rounded-xl [&_.ant-btn-primary]:shadow-lg [&_.ant-btn-primary]:shadow-purple-500/30 [&_.ant-btn-primary]:transition-all [&_.ant-btn-primary]:duration-300 [&_.ant-btn-primary:hover]:-translate-y-1 [&_.ant-btn-primary:hover]:shadow-xl [&_.ant-btn-primary:hover]:shadow-purple-500/40">
-                <div className="mb-4">
-                  <strong>Recipients:</strong>
-                  <Radio.Group
-                    value={emailRecipients}
-                    onChange={(e) =>
-                      handleEmailRecipientsChange(e.target.value)
-                    }
-                    className="ml-4"
-                  >
-                    <Radio value="registered">
-                      Registered Users ({registeredUsers.length})
-                    </Radio>
-                    <Radio value="waitlist">
-                      Waitlisted Users ({waitlistedUsers.length})
-                    </Radio>
-                    <Radio value="both">
-                      Both Registered & Waitlisted (
-                      {registeredUsers.length + waitlistedUsers.length})
-                    </Radio>
-                  </Radio.Group>
-                </div>
+                  <div className="backdrop-blur-xl bg-white/60 rounded-2xl shadow-2xl border border-white/30 p-6 mb-4 [&_.ant-radio-wrapper]:bg-white/50 [&_.ant-radio-wrapper]:backdrop-blur-md [&_.ant-radio-wrapper]:border-white/30 [&_.ant-radio-wrapper]:rounded-lg [&_.ant-radio-wrapper]:p-3 [&_.ant-radio-wrapper]:m-1 [&_.ant-radio-wrapper:hover]:bg-white/70 [&_.ant-input]:bg-white/70 [&_.ant-input]:backdrop-blur-md [&_.ant-input]:border-white/30 [&_.ant-input]:rounded-xl [&_.ant-input]:focus:bg-white/90 [&_.ant-input]:focus:border-purple-500/50 [&_.ant-input]:focus:shadow-lg [&_.ant-input]:focus:shadow-purple-500/20 [&_.ant-btn-primary]:bg-gradient-to-r [&_.ant-btn-primary]:from-purple-500 [&_.ant-btn-primary]:to-blue-500 [&_.ant-btn-primary]:border-none [&_.ant-btn-primary]:rounded-xl [&_.ant-btn-primary]:shadow-lg [&_.ant-btn-primary]:shadow-purple-500/30 [&_.ant-btn-primary]:transition-all [&_.ant-btn-primary]:duration-300 [&_.ant-btn-primary:hover]:-translate-y-1 [&_.ant-btn-primary:hover]:shadow-xl [&_.ant-btn-primary:hover]:shadow-purple-500/40">
+                    <div className="mb-4">
+                      <strong>Recipients:</strong>
+                      <Radio.Group
+                        value={emailRecipients}
+                        onChange={(e) =>
+                          handleEmailRecipientsChange(e.target.value)
+                        }
+                        className="ml-4"
+                      >
+                        <Radio value="registered">
+                          Registered Users ({registeredUsers.length})
+                        </Radio>
+                        <Radio value="waitlist">
+                          Waitlisted Users ({waitlistedUsers.length})
+                        </Radio>
+                        <Radio value="both">
+                          Both Registered & Waitlisted (
+                          {registeredUsers.length + waitlistedUsers.length})
+                        </Radio>
+                      </Radio.Group>
+                    </div>
 
-                <Form
-                  form={emailForm}
-                  onFinish={handleEmailSubmit}
-                  layout="vertical"
-                >
-                  <Form.Item
-                    name="header"
-                    label="Email Header"
-                    rules={[
-                      { required: true, message: "Please enter email header" },
-                      {
-                        max: 100,
-                        message: "Header cannot exceed 100 characters",
-                      },
-                    ]}
-                  >
-                    <Input placeholder="e.g., Important Session Announcement!" />
-                  </Form.Item>
-
-                  <Form.Item
-                    name="subject"
-                    label="Subject"
-                    rules={[
-                      { required: true, message: "Please enter email subject" },
-                    ]}
-                  >
-                    <Input
-                      placeholder="e.g., Important Session Update"
-                      suffix={
-                        <span className="text-gray-400 text-xs">
-                          + session details will be added
-                        </span>
-                      }
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name="body"
-                    label="Message Body"
-                    rules={[
-                      { required: true, message: "Please enter email message" },
-                    ]}
-                  >
-                    <TextArea
-                      placeholder="Enter your announcement message here..."
-                      rows={6}
-                      showCount
-                      maxLength={2000}
-                    />
-                  </Form.Item>
-
-                  <Form.Item>
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      loading={emailLoading}
-                      disabled={
-                        (emailRecipients === "registered" &&
-                          registeredUsers.length === 0) ||
-                        (emailRecipients === "waitlist" &&
-                          waitlistedUsers.length === 0) ||
-                        (emailRecipients === "both" &&
-                          registeredUsers.length + waitlistedUsers.length === 0)
-                      }
-                      icon={<MailOutlined />}
-                      className="bg-nyu-purple hover:!bg-nyu-purple-light"
+                    <Form
+                      form={emailForm}
+                      onFinish={handleEmailSubmit}
+                      layout="vertical"
                     >
-                      Send Email
-                    </Button>
-                  </Form.Item>
-                </Form>
-              </div>
-            </TabPane>
-          </Tabs>
+                      <Form.Item
+                        name="header"
+                        label="Email Header"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Please enter email header",
+                          },
+                          {
+                            max: 100,
+                            message: "Header cannot exceed 100 characters",
+                          },
+                        ]}
+                      >
+                        <Input placeholder="e.g., Important Session Announcement!" />
+                      </Form.Item>
+
+                      <Form.Item
+                        name="subject"
+                        label="Subject"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Please enter email subject",
+                          },
+                        ]}
+                      >
+                        <Input
+                          placeholder="e.g., Important Session Update"
+                          suffix={
+                            <span className="text-gray-400 text-xs">
+                              + session details will be added
+                            </span>
+                          }
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        name="body"
+                        label="Message Body"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Please enter email message",
+                          },
+                        ]}
+                      >
+                        <TextArea
+                          placeholder="Enter your announcement message here..."
+                          rows={6}
+                          showCount
+                          maxLength={2000}
+                        />
+                      </Form.Item>
+
+                      <Form.Item>
+                        <Button
+                          type="primary"
+                          htmlType="submit"
+                          loading={emailLoading}
+                          disabled={
+                            (emailRecipients === "registered" &&
+                              registeredUsers.length === 0) ||
+                            (emailRecipients === "waitlist" &&
+                              waitlistedUsers.length === 0) ||
+                            (emailRecipients === "both" &&
+                              registeredUsers.length +
+                                waitlistedUsers.length ===
+                                0)
+                          }
+                          icon={<MailOutlined />}
+                          className="bg-nyu-purple hover:!bg-nyu-purple-light"
+                        >
+                          Send Email
+                        </Button>
+                      </Form.Item>
+                    </Form>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Desktop: Regular Tabs */
+            <Tabs defaultActiveKey="registered">
+              <TabPane
+                tab={`Registered (${registeredUsers.length})`}
+                key="registered"
+              >
+                <Table
+                  columns={registrationColumns}
+                  dataSource={registeredUsers}
+                  loading={registrationsLoading}
+                  pagination={false}
+                  rowKey="id"
+                  size="small"
+                />
+              </TabPane>
+              <TabPane
+                tab={`Waitlist (${waitlistedUsers.length})`}
+                key="waitlist"
+              >
+                <Table
+                  columns={waitlistColumns}
+                  dataSource={waitlistedUsers}
+                  loading={registrationsLoading}
+                  pagination={false}
+                  rowKey="id"
+                  size="small"
+                />
+              </TabPane>
+              <TabPane
+                tab={`Attendance (${registeredUsers.length})`}
+                key="attendance"
+              >
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="text-blue-800">
+                    <strong>📋 Attendance Management</strong>
+                    <div className="text-sm mt-1">
+                      Mark attendance for users who registered for this session.
+                      {selectedSession && isSessionPast(selectedSession)
+                        ? " No-shows will increment the user's no-show count."
+                        : " This session hasn't occurred yet - you can pre-mark attendance if needed."}
+                    </div>
+                  </div>
+                </div>
+                <Table
+                  columns={attendanceColumns}
+                  dataSource={registeredUsers}
+                  loading={registrationsLoading}
+                  pagination={false}
+                  rowKey="id"
+                  size="small"
+                />
+              </TabPane>
+              <TabPane
+                tab={
+                  <span>
+                    <MailOutlined /> Email
+                  </span>
+                }
+                key="email"
+              >
+                <div className="mb-4 backdrop-blur-xl bg-purple-50/80 rounded-2xl border border-purple-200/50 p-4">
+                  <div className="text-purple-800">
+                    <strong className="text-lg">
+                      📧 Send Announcement Email
+                    </strong>
+                    <div className="text-sm mt-2 text-gray-600">
+                      Send a custom email announcement to users registered for
+                      this session. The header appears below the NYU Tennis Club
+                      banner, and the subject will automatically include session
+                      details.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="backdrop-blur-xl bg-white/60 rounded-2xl shadow-2xl border border-white/30 p-6 mb-4 [&_.ant-radio-wrapper]:bg-white/50 [&_.ant-radio-wrapper]:backdrop-blur-md [&_.ant-radio-wrapper]:border-white/30 [&_.ant-radio-wrapper]:rounded-lg [&_.ant-radio-wrapper]:p-3 [&_.ant-radio-wrapper]:m-1 [&_.ant-radio-wrapper:hover]:bg-white/70 [&_.ant-input]:bg-white/70 [&_.ant-input]:backdrop-blur-md [&_.ant-input]:border-white/30 [&_.ant-input]:rounded-xl [&_.ant-input]:focus:bg-white/90 [&_.ant-input]:focus:border-purple-500/50 [&_.ant-input]:focus:shadow-lg [&_.ant-input]:focus:shadow-purple-500/20 [&_.ant-btn-primary]:bg-gradient-to-r [&_.ant-btn-primary]:from-purple-500 [&_.ant-btn-primary]:to-blue-500 [&_.ant-btn-primary]:border-none [&_.ant-btn-primary]:rounded-xl [&_.ant-btn-primary]:shadow-lg [&_.ant-btn-primary]:shadow-purple-500/30 [&_.ant-btn-primary]:transition-all [&_.ant-btn-primary]:duration-300 [&_.ant-btn-primary:hover]:-translate-y-1 [&_.ant-btn-primary:hover]:shadow-xl [&_.ant-btn-primary:hover]:shadow-purple-500/40">
+                  <div className="mb-4">
+                    <strong>Recipients:</strong>
+                    <Radio.Group
+                      value={emailRecipients}
+                      onChange={(e) =>
+                        handleEmailRecipientsChange(e.target.value)
+                      }
+                      className="ml-4"
+                    >
+                      <Radio value="registered">
+                        Registered Users ({registeredUsers.length})
+                      </Radio>
+                      <Radio value="waitlist">
+                        Waitlisted Users ({waitlistedUsers.length})
+                      </Radio>
+                      <Radio value="both">
+                        Both Registered & Waitlisted (
+                        {registeredUsers.length + waitlistedUsers.length})
+                      </Radio>
+                    </Radio.Group>
+                  </div>
+
+                  <Form
+                    form={emailForm}
+                    onFinish={handleEmailSubmit}
+                    layout="vertical"
+                  >
+                    <Form.Item
+                      name="header"
+                      label="Email Header"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please enter email header",
+                        },
+                        {
+                          max: 100,
+                          message: "Header cannot exceed 100 characters",
+                        },
+                      ]}
+                    >
+                      <Input placeholder="e.g., Important Session Announcement!" />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="subject"
+                      label="Subject"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please enter email subject",
+                        },
+                      ]}
+                    >
+                      <Input
+                        placeholder="e.g., Important Session Update"
+                        suffix={
+                          <span className="text-gray-400 text-xs">
+                            + session details will be added
+                          </span>
+                        }
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="body"
+                      label="Message Body"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please enter email message",
+                        },
+                      ]}
+                    >
+                      <TextArea
+                        placeholder="Enter your announcement message here..."
+                        rows={6}
+                        showCount
+                        maxLength={2000}
+                      />
+                    </Form.Item>
+
+                    <Form.Item>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={emailLoading}
+                        disabled={
+                          (emailRecipients === "registered" &&
+                            registeredUsers.length === 0) ||
+                          (emailRecipients === "waitlist" &&
+                            waitlistedUsers.length === 0) ||
+                          (emailRecipients === "both" &&
+                            registeredUsers.length + waitlistedUsers.length ===
+                              0)
+                        }
+                        icon={<MailOutlined />}
+                        className="bg-nyu-purple hover:!bg-nyu-purple-light"
+                      >
+                        Send Email
+                      </Button>
+                    </Form.Item>
+                  </Form>
+                </div>
+              </TabPane>
+            </Tabs>
+          )}
         </div>
       </Modal>
     </div>

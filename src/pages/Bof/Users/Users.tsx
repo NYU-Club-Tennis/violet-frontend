@@ -19,6 +19,7 @@ import {
   getUsersPaginate,
   updateUserRole,
   updateMembershipLevel,
+  updateUserBanStatus,
 } from "actions/user.action";
 import { IUser, Role, MembershipLevel } from "interfaces/user.interface";
 import { AuthStore } from "stores/auth.store";
@@ -145,6 +146,60 @@ const Users: FC = () => {
         } catch (error) {
           console.error("Failed to update user role:", error);
           message.error("Failed to update user role. Please try again.");
+        } finally {
+          setUpdatingRoles((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(userId);
+            return newSet;
+          });
+        }
+      },
+    });
+  };
+
+  const handleBanStatusChange = async (
+    userId: number,
+    newBanStatus: boolean,
+    currentBanStatus: boolean
+  ) => {
+    if (newBanStatus === currentBanStatus) return;
+
+    // Prevent users from changing their own ban status
+    if (currentUser && userId === currentUser.id) {
+      message.error(
+        "You cannot change your own ban status. Please ask another admin to do this for you."
+      );
+      return;
+    }
+
+    const user = users.find((u) => u.id === userId);
+    const statusName = newBanStatus ? "banned" : "unbanned";
+
+    confirm({
+      title: "Confirm Ban Status Change",
+      icon: <ExclamationCircleOutlined />,
+      content: `Are you sure you want to ${statusName} ${user?.firstName} ${user?.lastName}?`,
+      okText: `Yes, ${statusName === "banned" ? "Ban" : "Unban"} User`,
+      cancelText: "Cancel",
+      onOk: async () => {
+        setUpdatingRoles((prev) => new Set(prev).add(userId));
+
+        try {
+          await updateUserBanStatus(userId, newBanStatus);
+
+          // Update the user in the local state
+          setUsers((prev) =>
+            prev.map((u) =>
+              u.id === userId ? { ...u, isBanned: newBanStatus } : u
+            )
+          );
+
+          message.success(
+            `Successfully ${statusName} ${user?.firstName} ${user?.lastName}`
+          );
+        } catch (error) {
+          console.error("Failed to update user ban status:", error);
+          message.error("Failed to update user ban status. Please try again.");
         } finally {
           setUpdatingRoles((prev) => {
             const newSet = new Set(prev);
@@ -286,6 +341,61 @@ const Users: FC = () => {
       },
     },
     {
+      title: "Ban Status",
+      dataIndex: "isBanned",
+      key: "banStatus",
+      render: (isBanned, record) => {
+        const isUpdating = updatingRoles.has(record.id);
+        const isCurrentUser = currentUser
+          ? record.id === currentUser.id
+          : false;
+
+        return (
+          <Select
+            value={isBanned}
+            onChange={(newBanStatus) =>
+              handleBanStatusChange(record.id, newBanStatus, isBanned)
+            }
+            loading={isUpdating}
+            disabled={isUpdating || isCurrentUser}
+            size="small"
+            style={{ width: 80 }}
+            dropdownStyle={{ minWidth: 80 }}
+            optionLabelProp="label"
+            className="
+            [&_.ant-select-selector]:!border-none 
+            [&_.ant-select-selector]:!bg-transparent"
+            title={isCurrentUser ? "You cannot change your own ban status" : ""}
+          >
+            <Option
+              value={false}
+              label={
+                <Tag color="green" style={{ margin: 0 }}>
+                  Active
+                </Tag>
+              }
+            >
+              <Tag color="green" style={{ margin: 0 }}>
+                Active
+              </Tag>
+            </Option>
+            <Option
+              value={true}
+              label={
+                <Tag color="red" style={{ margin: 0 }}>
+                  Banned
+                </Tag>
+              }
+            >
+              <Tag color="red" style={{ margin: 0 }}>
+                Banned
+              </Tag>
+            </Option>
+          </Select>
+        );
+      },
+    },
+    {
       title: "No-Show Count",
       dataIndex: "noShowCount",
       key: "noShowCount",
@@ -318,9 +428,9 @@ const Users: FC = () => {
 
       <div className="backdrop-blur-xl bg-white/60 rounded-3xl shadow-2xl border border-white/30 p-6 mb-6">
         <div className="text-blue-800 text-sm">
-          💡 <strong>Note:</strong> You cannot change your own role. Your row is
-          highlighted in blue. Please ask another admin to modify your role if
-          needed.
+          💡 <strong>Note:</strong> You cannot change your own role or ban
+          status. Your row is highlighted in blue. Please ask another admin to
+          modify your role or ban status if needed.
         </div>
       </div>
 
@@ -340,11 +450,15 @@ const Users: FC = () => {
           loading={loading}
           pagination={false}
           rowKey="id"
-          rowClassName={(record) =>
-            currentUser && record.id === currentUser.id
-              ? "bg-gradient-to-r from-blue-100/50 to-purple-100/50 border-l-4 border-blue-400"
-              : ""
-          }
+          rowClassName={(record) => {
+            if (currentUser && record.id === currentUser.id) {
+              return "bg-gradient-to-r from-blue-100/50 to-purple-100/50 border-l-4 border-blue-400";
+            }
+            if (record.isBanned) {
+              return "bg-gradient-to-r from-red-100/50 to-pink-100/50 border-l-4 border-red-400";
+            }
+            return "";
+          }}
           className="glass-table"
         />
       </div>
