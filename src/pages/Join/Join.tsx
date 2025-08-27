@@ -44,7 +44,7 @@ const Join: FC = () => {
 
       // Filter sessions based on status
       const availableSessions = response.data.filter(
-        (session) => session.status === "OPEN"
+        (session) => session.status !== "CLOSED"
       );
       const pastSessions = response.data.filter(
         (session) => session.status === "CLOSED"

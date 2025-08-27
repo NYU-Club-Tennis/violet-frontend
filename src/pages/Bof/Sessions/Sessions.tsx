@@ -41,7 +41,10 @@ import {
   getSessionRegistrationsWithUsers,
   markAttendance,
 } from "actions/registration.action";
-import { sendBulkAnnouncement } from "actions/mail.action";
+import {
+  sendBulkAnnouncement,
+  sendSessionNotification,
+} from "actions/mail.action";
 import {
   ISession,
   ISessionCreate,
@@ -265,9 +268,8 @@ const Sessions: FC = () => {
       );
       const enhancedSubject = `${values.subject} - ${selectedSession.name} - ${sessionDate} at ${selectedSession.location}`;
 
-      await sendBulkAnnouncement({
+      await sendSessionNotification({
         emails: recipientEmails,
-        header: values.header,
         subject: enhancedSubject,
         body: values.body,
       });
@@ -334,20 +336,51 @@ const Sessions: FC = () => {
 
     setEditLoading(true);
     try {
-      const spotsDifference = values.spotsTotal - sessionToEdit.spotsTotal;
-      const newSpotsAvailable = sessionToEdit.spotsAvailable + spotsDifference;
+      // Only include fields that actually changed
+      const updateData: ISessionUpdate = {};
 
-      const updateData: ISessionUpdate = {
-        name: values.name,
-        location: values.location,
-        date: values.date.format("YYYY-MM-DD"),
-        time: values.time.format("HH:mm"),
-        skillLevels: values.skillLevels,
-        spotsTotal: values.spotsTotal,
-        // Ensure available spots never go below 0
-        spotsAvailable: Math.max(0, newSpotsAvailable),
-        notes: values.notes,
-      };
+      if (values.name !== sessionToEdit.name) {
+        updateData.name = values.name;
+      }
+
+      if (values.location !== sessionToEdit.location) {
+        updateData.location = values.location;
+      }
+
+      if (values.date.format("YYYY-MM-DD") !== sessionToEdit.date) {
+        updateData.date = values.date.format("YYYY-MM-DD");
+      }
+
+      if (values.time.format("HH:mm") !== sessionToEdit.time) {
+        updateData.time = values.time.format("HH:mm");
+      }
+
+      if (
+        JSON.stringify(values.skillLevels) !==
+        JSON.stringify(sessionToEdit.skillLevels)
+      ) {
+        updateData.skillLevels = values.skillLevels;
+      }
+
+      if (values.spotsTotal !== sessionToEdit.spotsTotal) {
+        updateData.spotsTotal = values.spotsTotal;
+        // Calculate new spots available only if spots total changed
+        const spotsDifference = values.spotsTotal - sessionToEdit.spotsTotal;
+        const newSpotsAvailable =
+          sessionToEdit.spotsAvailable + spotsDifference;
+        updateData.spotsAvailable = Math.max(0, newSpotsAvailable);
+      }
+
+      if (values.notes !== sessionToEdit.notes) {
+        updateData.notes = values.notes;
+      }
+
+      // Only update if there are actual changes
+      if (Object.keys(updateData).length === 0) {
+        message.info("No changes detected");
+        handleEditModalClose();
+        return;
+      }
 
       await updateSession(sessionToEdit.id, updateData);
 
@@ -848,6 +881,58 @@ const Sessions: FC = () => {
   ];
 
   const [activeTab, setActiveTab] = useState("registered");
+  const [pendingStatusChange, setPendingStatusChange] =
+    useState<SessionStatus | null>(null);
+  const [statusChangeLoading, setStatusChangeLoading] = useState(false);
+
+  const handleStatusChange = async (newStatus: SessionStatus) => {
+    if (!selectedSession) return;
+
+    // Just set the pending status change - don't apply yet
+    setPendingStatusChange(newStatus);
+  };
+
+  // Apply pending status change
+  const applyStatusChange = async () => {
+    if (!selectedSession || !pendingStatusChange) return;
+
+    setStatusChangeLoading(true);
+
+    try {
+      // Only send the status change - let the backend handle spots automatically
+      const updateData: ISessionUpdate = {
+        status: pendingStatusChange,
+      };
+
+      // Update session first
+      await updateSession(selectedSession.id, updateData);
+      message.success(`Session status updated to ${pendingStatusChange}!`);
+
+      // Update local state
+      setSelectedSession((prev) =>
+        prev ? { ...prev, status: pendingStatusChange } : null
+      );
+
+      // Clear pending status and refresh sessions list
+      setPendingStatusChange(null);
+      fetchSessions(currentPage, statusFilter);
+    } catch (error: any) {
+      console.error("Failed to update session status:", error);
+      const errorMessage = error?.response?.data?.message;
+      if (errorMessage) {
+        message.error(`Error: ${errorMessage}`);
+      } else {
+        message.error("Failed to update session status. Please try again.");
+      }
+    } finally {
+      setStatusChangeLoading(false);
+    }
+  };
+
+  // Cancel pending status change
+  const cancelStatusChange = () => {
+    setPendingStatusChange(null);
+  };
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
@@ -1257,6 +1342,152 @@ const Sessions: FC = () => {
                 Delete Session
               </Button>
             </Popconfirm>
+          </div>
+
+          {/* Session Status Management */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-lg font-semibold text-gray-800">
+                Session Status
+              </h4>
+              <Tag
+                color={
+                  (pendingStatusChange || selectedSession?.status) ===
+                  SessionStatus.OPEN
+                    ? "green"
+                    : (pendingStatusChange || selectedSession?.status) ===
+                      SessionStatus.FULL
+                    ? "orange"
+                    : (pendingStatusChange || selectedSession?.status) ===
+                      SessionStatus.VIEW_ONLY
+                    ? "blue"
+                    : "red"
+                }
+                className="text-sm font-medium"
+              >
+                {pendingStatusChange || selectedSession?.status || "Unknown"}
+              </Tag>
+            </div>
+
+            {/* Show pending status change */}
+            {pendingStatusChange &&
+              pendingStatusChange !== selectedSession?.status && (
+                <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="text-blue-800 text-sm">
+                    <strong>Pending Change:</strong> Status will change from{" "}
+                    <strong>{selectedSession?.status}</strong> to{" "}
+                    <strong>{pendingStatusChange}</strong>
+                  </div>
+                </div>
+              )}
+
+            <div className="text-sm text-gray-600 mb-3">
+              Current Status: <strong>{selectedSession?.status}</strong>
+              {selectedSession?.status === SessionStatus.OPEN &&
+                " - Open for registrations"}
+              {selectedSession?.status === SessionStatus.FULL &&
+                " - Full but waitlist available"}
+              {selectedSession?.status === SessionStatus.VIEW_ONLY &&
+                " - Can view but cannot register"}
+              {selectedSession?.status === SessionStatus.CLOSED &&
+                " - Completely closed"}
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-3">
+              <Button
+                size="small"
+                type={
+                  (pendingStatusChange || selectedSession?.status) ===
+                  SessionStatus.OPEN
+                    ? "primary"
+                    : "default"
+                }
+                onClick={() => handleStatusChange(SessionStatus.OPEN)}
+                className={
+                  (pendingStatusChange || selectedSession?.status) ===
+                  SessionStatus.OPEN
+                    ? "bg-green-500 hover:!bg-green-600"
+                    : ""
+                }
+              >
+                Open
+              </Button>
+              <Button
+                size="small"
+                type={
+                  (pendingStatusChange || selectedSession?.status) ===
+                  SessionStatus.FULL
+                    ? "primary"
+                    : "default"
+                }
+                onClick={() => handleStatusChange(SessionStatus.FULL)}
+                className={
+                  (pendingStatusChange || selectedSession?.status) ===
+                  SessionStatus.FULL
+                    ? "bg-orange-500 hover:!bg-orange-600"
+                    : ""
+                }
+              >
+                Full
+              </Button>
+              <Button
+                size="small"
+                type={
+                  (pendingStatusChange || selectedSession?.status) ===
+                  SessionStatus.VIEW_ONLY
+                    ? "primary"
+                    : "default"
+                }
+                onClick={() => handleStatusChange(SessionStatus.VIEW_ONLY)}
+                className={
+                  (pendingStatusChange || selectedSession?.status) ===
+                  SessionStatus.VIEW_ONLY
+                    ? "bg-blue-500 hover:!bg-blue-600"
+                    : ""
+                }
+              >
+                View Only
+              </Button>
+              <Button
+                size="small"
+                type={
+                  (pendingStatusChange || selectedSession?.status) ===
+                  SessionStatus.CLOSED
+                    ? "primary"
+                    : "default"
+                }
+                onClick={() => handleStatusChange(SessionStatus.CLOSED)}
+                className={
+                  (pendingStatusChange || selectedSession?.status) ===
+                  SessionStatus.CLOSED
+                    ? "bg-red-500 hover:!bg-red-600"
+                    : ""
+                }
+              >
+                Closed
+              </Button>
+            </div>
+
+            {/* Save/Cancel buttons for pending changes */}
+            {pendingStatusChange &&
+              pendingStatusChange !== selectedSession?.status && (
+                <div className="flex gap-2 pt-3 border-t border-gray-200">
+                  <Button
+                    type="primary"
+                    onClick={applyStatusChange}
+                    loading={statusChangeLoading}
+                    className="bg-green-500 hover:!bg-green-600"
+                  >
+                    Save Status Change
+                  </Button>
+                  <Button
+                    onClick={cancelStatusChange}
+                    disabled={statusChangeLoading}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
           </div>
 
           {/* Mobile: Dropdown tabs, Desktop: Regular tabs */}

@@ -14,6 +14,7 @@ import {
   Spin,
   Radio,
   Typography,
+  Select,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { AuthStore } from "stores/auth.store";
@@ -30,6 +31,7 @@ import {
 } from "@ant-design/icons";
 import { updateUser } from "actions/user.action";
 import { getCurrentUser } from "actions/user.action";
+import { updateEmailPreferences } from "actions/user.action";
 import {
   getUserSessions,
   cancelSessionRegistration,
@@ -58,6 +60,7 @@ const Profile = () => {
   const [activeSessionTab, setActiveSessionTab] = useState<"upcoming" | "past">(
     "upcoming"
   );
+  const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [isPreferencesModalVisible, setIsPreferencesModalVisible] =
@@ -79,6 +82,14 @@ const Profile = () => {
       loadRegistrations();
     }
   }, [user?.id]);
+
+  // Responsive detection for mobile UI tweaks
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const loadCurrentUser = async () => {
     try {
@@ -481,6 +492,27 @@ const Profile = () => {
     }
   };
 
+  const handleEmailPreferencesSubmit = async (values: any) => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
+    try {
+      const response = await updateEmailPreferences(
+        user.id,
+        values.sessionNotifications,
+        values.clubAnnouncements
+      );
+      setUser(response.data);
+      message.success("Email preferences updated successfully");
+      setIsPreferencesModalVisible(false);
+    } catch (error) {
+      console.error("Error updating email preferences:", error);
+      message.error("Failed to update email preferences");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pt-28">
       {/* Main Content */}
@@ -573,31 +605,63 @@ const Profile = () => {
           <div className="lg:col-span-2">
             <Card>
               <div className="mb-4">
-                <Radio.Group
-                  value={activeSessionTab}
-                  onChange={(e) => setActiveSessionTab(e.target.value)}
-                  buttonStyle="solid"
-                  className="w-full"
-                >
-                  <Radio.Button value="upcoming">
-                    <CalendarOutlined className="mr-2" />
-                    Upcoming Sessions
-                    {upcomingSessions.length > 0 && (
-                      <Tag className="ml-2" color="blue">
-                        {upcomingSessions.length}
-                      </Tag>
-                    )}
-                  </Radio.Button>
-                  <Radio.Button value="past">
-                    <HistoryOutlined className="mr-2" />
-                    Past Sessions
-                    {pastSessions.length > 0 && (
-                      <Tag className="ml-2" color="default">
-                        {pastSessions.length}
-                      </Tag>
-                    )}
-                  </Radio.Button>
-                </Radio.Group>
+                {isMobile ? (
+                  <Select
+                    value={activeSessionTab}
+                    onChange={(val) => setActiveSessionTab(val)}
+                    style={{ width: "100%" }}
+                    className="[&_.ant-select-selector]:!rounded-xl"
+                  >
+                    <Select.Option value="upcoming">
+                      <span className="flex items-center">
+                        <CalendarOutlined className="mr-2" />
+                        Upcoming Sessions
+                        {upcomingSessions.length > 0 && (
+                          <Tag className="ml-2" color="blue">
+                            {upcomingSessions.length}
+                          </Tag>
+                        )}
+                      </span>
+                    </Select.Option>
+                    <Select.Option value="past">
+                      <span className="flex items-center">
+                        <HistoryOutlined className="mr-2" />
+                        Past Sessions
+                        {pastSessions.length > 0 && (
+                          <Tag className="ml-2" color="default">
+                            {pastSessions.length}
+                          </Tag>
+                        )}
+                      </span>
+                    </Select.Option>
+                  </Select>
+                ) : (
+                  <Radio.Group
+                    value={activeSessionTab}
+                    onChange={(e) => setActiveSessionTab(e.target.value)}
+                    buttonStyle="solid"
+                    className="w-full"
+                  >
+                    <Radio.Button value="upcoming">
+                      <CalendarOutlined className="mr-2" />
+                      Upcoming Sessions
+                      {upcomingSessions.length > 0 && (
+                        <Tag className="ml-2" color="blue">
+                          {upcomingSessions.length}
+                        </Tag>
+                      )}
+                    </Radio.Button>
+                    <Radio.Button value="past">
+                      <HistoryOutlined className="mr-2" />
+                      Past Sessions
+                      {pastSessions.length > 0 && (
+                        <Tag className="ml-2" color="default">
+                          {pastSessions.length}
+                        </Tag>
+                      )}
+                    </Radio.Button>
+                  </Radio.Group>
+                )}
               </div>
 
               <Spin spinning={sessionsLoading}>
@@ -831,24 +895,16 @@ const Profile = () => {
         <Form
           form={preferencesForm}
           layout="vertical"
-          onFinish={() => {
-            message.success("Preferences updated");
-            setIsPreferencesModalVisible(false);
+          onFinish={handleEmailPreferencesSubmit}
+          initialValues={{
+            sessionNotifications: user?.emailSessionNotifications ?? true,
+            clubAnnouncements: user?.emailClubAnnouncements ?? true,
           }}
         >
           <Form.Item
-            name="sessionReminders"
-            label="Session Reminders"
+            name="sessionNotifications"
+            label="Session Notifications"
             valuePropName="checked"
-            initialValue={true}
-          >
-            <Switch />
-          </Form.Item>
-          <Form.Item
-            name="sessionCancellations"
-            label="Session Cancellations"
-            valuePropName="checked"
-            initialValue={true}
           >
             <Switch />
           </Form.Item>
@@ -856,7 +912,6 @@ const Profile = () => {
             name="clubAnnouncements"
             label="Club Announcements"
             valuePropName="checked"
-            initialValue={true}
           >
             <Switch />
           </Form.Item>

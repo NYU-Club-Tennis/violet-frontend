@@ -30,6 +30,8 @@ export interface IUser extends IBaseEntity {
   membershipLevel: MembershipLevel;
   noShowCount?: number;
   isBanned: boolean | null; // Allow null values from backend
+  emailSessionNotifications: boolean;
+  emailClubAnnouncements: boolean;
   lastSignInAt?: string;
   role?: Role; // Optional field for local state management
 }
