@@ -9,6 +9,7 @@ import {
   Select,
   Modal,
   message,
+  Collapse,
 } from "antd";
 import {
   SearchOutlined,
@@ -28,6 +29,7 @@ import type { ColumnsType } from "antd/es/table";
 const { Search } = Input;
 const { Option } = Select;
 const { confirm } = Modal;
+const { Panel } = Collapse;
 
 const Users: FC = () => {
   const { user: currentUser } = AuthStore();
@@ -37,7 +39,21 @@ const Users: FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [updatingRoles, setUpdatingRoles] = useState<Set<number>>(new Set());
+  const [isMobile, setIsMobile] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
   const pageSize = 10;
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const fetchUsers = async (page: number, search?: string) => {
     setLoading(true);
@@ -160,9 +176,13 @@ const Users: FC = () => {
   const handleBanStatusChange = async (
     userId: number,
     newBanStatus: boolean,
-    currentBanStatus: boolean
+    currentBanStatus: boolean | null
   ) => {
-    if (newBanStatus === currentBanStatus) return;
+    // Convert null to false for comparison
+    const normalizedCurrentStatus =
+      currentBanStatus === null ? false : currentBanStatus;
+
+    if (newBanStatus === normalizedCurrentStatus) return;
 
     // Prevent users from changing their own ban status
     if (currentUser && userId === currentUser.id) {
@@ -185,18 +205,22 @@ const Users: FC = () => {
         setUpdatingRoles((prev) => new Set(prev).add(userId));
 
         try {
-          await updateUserBanStatus(userId, newBanStatus);
+          const result = await updateUserBanStatus(userId, newBanStatus);
 
           // Update the user in the local state
-          setUsers((prev) =>
-            prev.map((u) =>
+          setUsers((prev) => {
+            const updated = prev.map((u) =>
               u.id === userId ? { ...u, isBanned: newBanStatus } : u
-            )
-          );
+            );
+            return updated;
+          });
 
           message.success(
             `Successfully ${statusName} ${user?.firstName} ${user?.lastName}`
           );
+
+          // Force a refresh of the data from the backend
+          await fetchUsers(currentPage, searchTerm);
         } catch (error) {
           console.error("Failed to update user ban status:", error);
           message.error("Failed to update user ban status. Please try again.");
@@ -350,22 +374,29 @@ const Users: FC = () => {
           ? record.id === currentUser.id
           : false;
 
+        // Ensure isBanned is a boolean
+        const banStatus = isBanned === null ? false : Boolean(isBanned);
+
         return (
           <Select
-            value={isBanned}
+            value={banStatus}
             onChange={(newBanStatus) =>
-              handleBanStatusChange(record.id, newBanStatus, isBanned)
+              handleBanStatusChange(record.id, newBanStatus, banStatus)
             }
             loading={isUpdating}
             disabled={isUpdating || isCurrentUser}
             size="small"
-            style={{ width: 80 }}
-            dropdownStyle={{ minWidth: 80 }}
+            style={{ width: 120 }} // Increased width to prevent "three dots"
+            dropdownStyle={{ minWidth: 120 }} // Increased minWidth to prevent menu cutoff
             optionLabelProp="label"
             className="
             [&_.ant-select-selector]:!border-none 
             [&_.ant-select-selector]:!bg-transparent"
-            title={isCurrentUser ? "You cannot change your own ban status" : ""}
+            title={
+              currentUser && record.id === currentUser.id
+                ? "You cannot change your own ban status"
+                : ""
+            }
           >
             <Option
               value={false}
@@ -443,25 +474,251 @@ const Users: FC = () => {
         />
       </div>
 
-      <div className="backdrop-blur-xl bg-white/60 rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
-        <Table
-          columns={columns}
-          dataSource={users}
-          loading={loading}
-          pagination={false}
-          rowKey="id"
-          rowClassName={(record) => {
-            if (currentUser && record.id === currentUser.id) {
-              return "bg-gradient-to-r from-blue-100/50 to-purple-100/50 border-l-4 border-blue-400";
-            }
-            if (record.isBanned) {
-              return "bg-gradient-to-r from-red-100/50 to-pink-100/50 border-l-4 border-red-400";
-            }
-            return "";
-          }}
-          className="glass-table"
-        />
-      </div>
+      {/* Mobile: User Cards, Desktop: Table */}
+      {isMobile ? (
+        <div className="space-y-3">
+          {users.map((user) => (
+            <div
+              key={user.id}
+              className={`backdrop-blur-xl bg-white/60 rounded-xl shadow-lg border border-white/30 p-3 transition-all duration-300 cursor-pointer hover:shadow-xl hover:scale-[1.02] ${
+                currentUser && user.id === currentUser.id
+                  ? "bg-gradient-to-r from-blue-100/50 to-purple-100/50 border-l-4 border-blue-400"
+                  : user.isBanned
+                  ? "bg-gradient-to-r from-red-100/50 to-pink-100/50 border-l-4 border-red-400"
+                  : ""
+              }`}
+              onClick={() => setSelectedUser(user)}
+            >
+              {/* Compact User Info */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <UserOutlined className="text-purple-500 text-lg" />
+                  <div>
+                    <h3 className="font-semibold text-gray-900">
+                      {user.firstName} {user.lastName}
+                    </h3>
+                    <p className="text-gray-600 text-sm">{user.email}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end space-y-1">
+                  <Tag
+                    color={
+                      getUserEffectiveRole(user) === Role.ADMIN
+                        ? "red"
+                        : getUserEffectiveRole(user) === Role.MEMBER
+                        ? "orange"
+                        : "blue"
+                    }
+                  >
+                    {getUserEffectiveRole(user) === Role.ADMIN
+                      ? "Admin"
+                      : getUserEffectiveRole(user) === Role.MEMBER
+                      ? "Member"
+                      : "User"}
+                  </Tag>
+                  <Tag
+                    color={
+                      (user.isBanned === null ? false : user.isBanned)
+                        ? "red"
+                        : "green"
+                    }
+                  >
+                    {(user.isBanned === null ? false : user.isBanned)
+                      ? "Banned"
+                      : "Active"}
+                  </Tag>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="backdrop-blur-xl bg-white/60 rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
+          <Table
+            columns={columns}
+            dataSource={users}
+            loading={loading}
+            pagination={false}
+            rowKey="id"
+            rowClassName={(record) => {
+              if (currentUser && record.id === currentUser.id) {
+                return "bg-gradient-to-r from-blue-100/50 to-purple-100/50 border-l-4 border-blue-400";
+              }
+              if (record.isBanned) {
+                return "bg-gradient-to-r from-red-100/50 to-pink-100/50 border-l-4 border-red-400";
+              }
+              return "";
+            }}
+            className="glass-table"
+          />
+        </div>
+      )}
+
+      {/* User Details Modal */}
+      <Modal
+        title={
+          <div className="flex items-center space-x-3">
+            <UserOutlined className="text-purple-500 text-xl" />
+            <div>
+              <h3 className="text-xl font-bold mb-1">
+                {selectedUser?.firstName} {selectedUser?.lastName}
+              </h3>
+              <p className="text-gray-600 text-sm">{selectedUser?.email}</p>
+            </div>
+          </div>
+        }
+        open={!!selectedUser}
+        onCancel={() => setSelectedUser(null)}
+        footer={null}
+        width={600}
+        destroyOnClose
+      >
+        {selectedUser && (
+          <div className="space-y-6">
+            {/* User Details */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Phone:</span>
+                <span className="font-medium">
+                  {selectedUser.phoneNumber || "N/A"}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">No-Show Count:</span>
+                <Tag
+                  color={
+                    (selectedUser.noShowCount || 0) > 0 ? "orange" : "green"
+                  }
+                >
+                  {selectedUser.noShowCount || 0}
+                </Tag>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Last Sign In:</span>
+                <span className="font-medium">
+                  {selectedUser.lastSignInAt
+                    ? new Date(selectedUser.lastSignInAt).toLocaleDateString()
+                    : "Never"}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Joined:</span>
+                <span className="font-medium">
+                  {selectedUser.createdAt
+                    ? new Date(selectedUser.createdAt).toLocaleDateString()
+                    : "N/A"}
+                </span>
+              </div>
+            </div>
+
+            {/* Role Management */}
+            <div className="pt-4 border-t border-gray-200">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-gray-600 font-medium">
+                  Role Management:
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Role:</span>
+                <Select
+                  value={getUserEffectiveRole(selectedUser)}
+                  onChange={(newRole) =>
+                    handleRoleChange(
+                      selectedUser.id,
+                      newRole,
+                      getUserEffectiveRole(selectedUser)
+                    )
+                  }
+                  loading={updatingRoles.has(selectedUser.id)}
+                  disabled={
+                    updatingRoles.has(selectedUser.id) ||
+                    (currentUser && selectedUser.id === currentUser.id)
+                  }
+                  size="middle"
+                  style={{ width: 150 }}
+                  className="[&_.ant-select-selector]:!border-none [&_.ant-select-selector]:!bg-transparent"
+                  title={
+                    currentUser && selectedUser.id === currentUser.id
+                      ? "You cannot change your own role"
+                      : ""
+                  }
+                >
+                  <Option value={Role.USER}>
+                    <Tag color="blue" style={{ margin: 0 }}>
+                      User
+                    </Tag>
+                  </Option>
+                  <Option value={Role.MEMBER}>
+                    <Tag color="orange" style={{ margin: 0 }}>
+                      Member
+                    </Tag>
+                  </Option>
+                  <Option value={Role.ADMIN}>
+                    <Tag color="red" style={{ margin: 0 }}>
+                      Admin
+                    </Tag>
+                  </Option>
+                </Select>
+              </div>
+            </div>
+
+            {/* Ban Status Management */}
+            <div className="pt-4 border-t border-gray-200">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-gray-600 font-medium">
+                  Ban Management:
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Status:</span>
+                <Select
+                  value={
+                    selectedUser.isBanned === null
+                      ? false
+                      : selectedUser.isBanned
+                  }
+                  onChange={(newBanStatus) =>
+                    handleBanStatusChange(
+                      selectedUser.id,
+                      newBanStatus,
+                      selectedUser.isBanned === null
+                        ? false
+                        : selectedUser.isBanned
+                    )
+                  }
+                  loading={updatingRoles.has(selectedUser.id)}
+                  disabled={
+                    updatingRoles.has(selectedUser.id) ||
+                    (currentUser && selectedUser.id === currentUser.id)
+                  }
+                  size="middle"
+                  style={{ width: 120 }}
+                  className="[&_.ant-select-selector]:!border-none [&_.ant-select-selector]:!bg-transparent"
+                  title={
+                    currentUser && selectedUser.id === currentUser.id
+                      ? "You cannot change your own ban status"
+                      : ""
+                  }
+                >
+                  <Option value={false}>
+                    <Tag color="green" style={{ margin: 0 }}>
+                      Active
+                    </Tag>
+                  </Option>
+                  <Option value={true}>
+                    <Tag color="red" style={{ margin: 0 }}>
+                      Banned
+                    </Tag>
+                  </Option>
+                </Select>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {total > pageSize && (
         <div className="mt-6 flex justify-center">
