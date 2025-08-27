@@ -115,3 +115,14 @@ export const updateUserBanStatus = (userId: number, isBanned: boolean) => {
   const data: IUpdateUserBanStatusRequest = { isBanned };
   return fetch<IUser>(method, path, data);
 };
+
+export const updateEmailPreferences = (
+  userId: number,
+  emailSessionNotifications: boolean,
+  emailClubAnnouncements: boolean
+) => {
+  const method = "PATCH";
+  const path = `${url}/${userId}/email-preferences`;
+  const data = { emailSessionNotifications, emailClubAnnouncements };
+  return fetch<IUser>(method, path, data);
+};
