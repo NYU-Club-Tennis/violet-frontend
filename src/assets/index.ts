@@ -9,6 +9,7 @@ import home_5 from "./svgs/home-5.svg";
 import home_6 from "./svgs/home-6.svg";
 import home_7 from "./svgs/home-7.svg";
 import home_8 from "./svgs/home-8.svg";
+import home_9 from "./svgs/home-9.jpg";
 import nyuAthleticLogo from "./svgs/NYU-Athletic-logo.svg";
 import purpleAthleticLogoText from "./svgs/Purple-Athletic-logo-text.svg";
 import whiteAthleticLogoText from "./svgs/White-Athletic-logo-text.svg";
@@ -47,5 +48,6 @@ export {
   nyuAthleticLogo,
   purpleAthleticLogoText,
   whiteAthleticLogoText,
+  home_9,
   reactSvg,
 };
