@@ -177,12 +177,12 @@ const Home: FC = () => {
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-2">200+</div>
-                  <div className="text-white/70">Active Members</div>
+                  <div className="text-3xl font-bold text-white mb-2"></div>
+                  <div className="text-white/70"></div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-2">15+</div>
-                  <div className="text-white/70">Skill Levels</div>
+                  <div className="text-3xl font-bold text-white mb-2"></div>
+                  <div className="text-white/70"></div>
                 </div>
               </div>
             </div>
