@@ -18,6 +18,8 @@ interface SessionsTableProps {
   onEditSession: (session: ISession) => void;
   onDeleteSession: (session: ISession) => void;
   deletingSessionId: number | null;
+  onArchive?: (session: ISession) => void;
+  onUnarchive?: (session: ISession) => void;
 }
 
 const SessionsTable: FC<SessionsTableProps> = ({
@@ -28,6 +30,8 @@ const SessionsTable: FC<SessionsTableProps> = ({
   onEditSession,
   onDeleteSession,
   deletingSessionId,
+  onArchive,
+  onUnarchive,
 }) => {
   const getStatusColor = (status: SessionStatus): string => {
     switch (status) {
@@ -170,6 +174,30 @@ const SessionsTable: FC<SessionsTableProps> = ({
           >
             Delete
           </Button>
+          {onArchive && !record.isArchived && (
+            <Button
+              size="small"
+              type="link"
+              onClick={(e) => {
+                e.stopPropagation();
+                onArchive(record);
+              }}
+            >
+              Archive
+            </Button>
+          )}
+          {onUnarchive && record.isArchived && (
+            <Button
+              size="small"
+              type="link"
+              onClick={(e) => {
+                e.stopPropagation();
+                onUnarchive(record);
+              }}
+            >
+              Unarchive
+            </Button>
+          )}
         </Space>
       ),
     },

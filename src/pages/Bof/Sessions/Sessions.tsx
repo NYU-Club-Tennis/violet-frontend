@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from "react";
-import { Button, Pagination, Select, message, Form, Modal } from "antd";
+import { Button, Pagination, Select, message, Form, Modal, Tabs } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import {
   getSessionPaginate,
@@ -35,6 +35,7 @@ const { Option } = Select;
 const Sessions: FC = () => {
   // Main state
   const [sessions, setSessions] = useState<ISession[]>([]);
+  const [archivedSessions, setArchivedSessions] = useState<ISession[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -101,12 +102,13 @@ const Sessions: FC = () => {
         sortOptions: [{ date: "ASC" }, { time: "ASC" }] as {
           [key: string]: string;
         }[],
+        archived: false,
       };
 
       const response = await getSessionPaginate(query);
 
-      // Filter by status on frontend if provided (since backend might not support status filter)
-      let filteredSessions = response.data.data;
+      // Ensure archived sessions are never shown in this tab
+      let filteredSessions = response.data.data.filter((s) => !s.isArchived);
       if (status) {
         filteredSessions = response.data.data.filter(
           (session) => session.status === status
@@ -117,6 +119,29 @@ const Sessions: FC = () => {
       setTotal(status ? filteredSessions.length : response.data.total);
     } catch (error) {
       console.error("Failed to fetch sessions:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchArchivedSessions = async (page: number) => {
+    setLoading(true);
+    try {
+      const query = {
+        page,
+        limit: pageSize,
+        sortOptions: [{ date: "DESC" }, { time: "DESC" }] as {
+          [key: string]: string;
+        }[],
+        archived: true,
+      };
+
+      const response = await getSessionPaginate(query);
+      // Ensure only archived sessions are shown
+      setArchivedSessions(response.data.data.filter((s) => s.isArchived));
+    } catch (error) {
+      console.error("Failed to fetch archived sessions:", error);
+      setArchivedSessions([]);
     } finally {
       setLoading(false);
     }
@@ -165,6 +190,30 @@ const Sessions: FC = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleArchive = async (session: ISession) => {
+    try {
+      await (await import("actions/session.action")).archiveSession(session.id);
+      message.success("Session archived");
+      fetchSessions(currentPage, statusFilter);
+      fetchArchivedSessions(1);
+    } catch (e) {
+      message.error("Failed to archive session");
+    }
+  };
+
+  const handleUnarchive = async (session: ISession) => {
+    try {
+      await (
+        await import("actions/session.action")
+      ).unarchiveSession(session.id);
+      message.success("Session unarchived");
+      fetchSessions(currentPage, statusFilter);
+      fetchArchivedSessions(1);
+    } catch (e) {
+      message.error("Failed to unarchive session");
+    }
   };
 
   // Create session handlers
@@ -595,15 +644,50 @@ const Sessions: FC = () => {
         </div>
       </div>
 
-      {/* Sessions Table */}
-      <SessionsTable
-        sessions={sessions}
-        loading={loading}
-        isMobile={isMobile}
-        onSessionClick={handleSessionClick}
-        onEditSession={handleEditSession}
-        onDeleteSession={handleDeleteSession}
-        deletingSessionId={deletingSessionId}
+      {/* Tabs: Active vs Archived */}
+      <Tabs
+        defaultActiveKey="active"
+        onChange={(key) => {
+          if (key === "active") {
+            fetchSessions(currentPage, statusFilter);
+          } else if (key === "archived") {
+            fetchArchivedSessions(1);
+          }
+        }}
+        items={[
+          {
+            key: "active",
+            label: "Sessions",
+            children: (
+              <SessionsTable
+                sessions={sessions}
+                loading={loading}
+                isMobile={isMobile}
+                onSessionClick={handleSessionClick}
+                onEditSession={handleEditSession}
+                onDeleteSession={handleDeleteSession}
+                deletingSessionId={deletingSessionId}
+                onArchive={handleArchive}
+              />
+            ),
+          },
+          {
+            key: "archived",
+            label: "Archived",
+            children: (
+              <SessionsTable
+                sessions={archivedSessions}
+                loading={loading}
+                isMobile={isMobile}
+                onSessionClick={handleSessionClick}
+                onEditSession={handleEditSession}
+                onDeleteSession={handleDeleteSession}
+                deletingSessionId={deletingSessionId}
+                onUnarchive={handleUnarchive}
+              />
+            ),
+          },
+        ]}
       />
 
       {/* Pagination */}
