@@ -66,6 +66,12 @@ const Sessions: FC = () => {
   const [deletingSessionId, setDeletingSessionId] = useState<number | null>(
     null
   );
+  const [archivingSessionId, setArchivingSessionId] = useState<number | null>(
+    null
+  );
+  const [unarchivingSessionId, setUnarchivingSessionId] = useState<
+    number | null
+  >(null);
 
   // Status management state
   const [pendingStatusChange, setPendingStatusChange] =
@@ -194,17 +200,21 @@ const Sessions: FC = () => {
 
   const handleArchive = async (session: ISession) => {
     try {
+      setArchivingSessionId(session.id);
       await (await import("actions/session.action")).archiveSession(session.id);
       message.success("Session archived");
       fetchSessions(currentPage, statusFilter);
       fetchArchivedSessions(1);
     } catch (e) {
       message.error("Failed to archive session");
+    } finally {
+      setArchivingSessionId(null);
     }
   };
 
   const handleUnarchive = async (session: ISession) => {
     try {
+      setUnarchivingSessionId(session.id);
       await (
         await import("actions/session.action")
       ).unarchiveSession(session.id);
@@ -213,6 +223,8 @@ const Sessions: FC = () => {
       fetchArchivedSessions(1);
     } catch (e) {
       message.error("Failed to unarchive session");
+    } finally {
+      setUnarchivingSessionId(null);
     }
   };
 
@@ -270,6 +282,14 @@ const Sessions: FC = () => {
 
   // Edit session handlers
   const handleEditSession = (session: ISession) => {
+    // Open the Session Details modal instead of the Edit modal
+    setSelectedSession(session);
+    setRegistrationsModalVisible(true);
+    fetchSessionRegistrations(session.id);
+  };
+
+  // Open the Edit Session modal from within the Session Details modal
+  const handleOpenEditModal = (session: ISession) => {
     setSessionToEdit(session);
     setEditModalVisible(true);
 
@@ -668,6 +688,7 @@ const Sessions: FC = () => {
                 onDeleteSession={handleDeleteSession}
                 deletingSessionId={deletingSessionId}
                 onArchive={handleArchive}
+                archivingSessionId={archivingSessionId}
               />
             ),
           },
@@ -684,6 +705,7 @@ const Sessions: FC = () => {
                 onDeleteSession={handleDeleteSession}
                 deletingSessionId={deletingSessionId}
                 onUnarchive={handleUnarchive}
+                unarchivingSessionId={unarchivingSessionId}
               />
             ),
           },
@@ -744,7 +766,7 @@ const Sessions: FC = () => {
         emailLoading={emailLoading}
         emailRecipients={emailRecipients}
         onClose={handleModalClose}
-        onEditSession={handleEditSession}
+        onEditSession={handleOpenEditModal}
         onDeleteSession={handleDeleteSession}
         onStatusChange={handleStatusChange}
         onApplyStatusChange={applyStatusChange}
