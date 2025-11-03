@@ -5,6 +5,7 @@ import {
   IUserPaginateResponse,
   IUpdateUserRoleRequest,
   IUpdateMembershipLevelRequest,
+  IUpdateUserBanStatusRequest,
   Role,
 } from "interfaces/user.interface";
 import { fetch } from "../utils/fetch.util";
@@ -106,4 +107,22 @@ export const userExists = (email: string) => {
   const path = `${url}/exists`;
   const query = { email } as any;
   return fetch<{ exists: boolean }>(method, path, query);
+};
+
+export const updateUserBanStatus = (userId: number, isBanned: boolean) => {
+  const method = "PATCH";
+  const path = `${url}/${userId}/ban-status`;
+  const data: IUpdateUserBanStatusRequest = { isBanned };
+  return fetch<IUser>(method, path, data);
+};
+
+export const updateEmailPreferences = (
+  userId: number,
+  emailSessionNotifications: boolean,
+  emailClubAnnouncements: boolean
+) => {
+  const method = "PATCH";
+  const path = `${url}/${userId}/email-preferences`;
+  const data = { emailSessionNotifications, emailClubAnnouncements };
+  return fetch<IUser>(method, path, data);
 };

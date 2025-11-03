@@ -34,7 +34,7 @@ const Navbar: React.FC = () => {
     },
     {
       key: PAGE_TYPE.JOIN,
-      label: "Join",
+      label: "Sessions",
       onClick: () => handleTabChange(PAGE_TYPE.JOIN),
     },
     // {

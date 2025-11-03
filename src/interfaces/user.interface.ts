@@ -29,6 +29,9 @@ export interface IUser extends IBaseEntity {
   isAdmin: boolean;
   membershipLevel: MembershipLevel;
   noShowCount?: number;
+  isBanned: boolean | null; // Allow null values from backend
+  emailSessionNotifications: boolean;
+  emailClubAnnouncements: boolean;
   lastSignInAt?: string;
   role?: Role; // Optional field for local state management
 }
@@ -52,4 +55,8 @@ export interface IUpdateUserRoleRequest {
 
 export interface IUpdateMembershipLevelRequest {
   membershipLevel: MembershipLevel;
+}
+
+export interface IUpdateUserBanStatusRequest {
+  isBanned: boolean;
 }

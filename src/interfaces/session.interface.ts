@@ -13,6 +13,7 @@ export interface ISession extends IBaseEntity {
   spotsTotal: number;
   status: SessionStatus;
   notes?: string;
+  isArchived: boolean;
   registration?: any; // TODO: Add proper registration interface when available
 }
 
@@ -45,6 +46,7 @@ export type ISessionUpdateOld = Omit<ISession, "id">;
 export interface ISessionPaginateQuery extends IPaginateQuery {
   sortOptions: ISortOption[];
   skillLevels?: LEVELS[];
+  archived?: boolean;
 }
 
 export interface ISessionCountResponse {
