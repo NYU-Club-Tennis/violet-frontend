@@ -17,6 +17,20 @@ export const getSessionPaginate = (query: ISessionPaginateQuery) => {
   return fetch<IPaginateResponse<ISession>>(method, path, query);
 };
 
+export const archiveSession = (id: number) => {
+  const method = "POST";
+  const path = `${url}/${id}/archive`;
+
+  return fetch<ISession>(method, path);
+};
+
+export const unarchiveSession = (id: number) => {
+  const method = "POST";
+  const path = `${url}/${id}/unarchive`;
+
+  return fetch<ISession>(method, path);
+};
+
 export const getActiveSessionsCount = () => {
   const method = "GET";
   const path = `${url}/active/count`;
