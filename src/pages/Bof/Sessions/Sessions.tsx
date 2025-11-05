@@ -88,6 +88,11 @@ const Sessions: FC = () => {
 
   const pageSize = 10;
 
+  // Attendance per-row loading state
+  const [markingAttendanceId, setMarkingAttendanceId] = useState<number | null>(
+    null
+  );
+
   // Check if screen is mobile
   useEffect(() => {
     const checkMobile = () => {
@@ -605,6 +610,7 @@ const Sessions: FC = () => {
     hasAttended: boolean
   ) => {
     try {
+      setMarkingAttendanceId(registrationId);
       console.log(
         "Marking attendance for registration:",
         registrationId,
@@ -642,6 +648,8 @@ const Sessions: FC = () => {
       } else {
         message.error("Failed to mark attendance. Please try again.");
       }
+    } finally {
+      setMarkingAttendanceId(null);
     }
   };
 
@@ -795,6 +803,7 @@ const Sessions: FC = () => {
         onEmailRecipientsChange={handleEmailRecipientsChange}
         onEmailSubmit={handleEmailSubmit}
         onMarkAttendance={handleMarkAttendance}
+        markingAttendanceId={markingAttendanceId}
         onUnregister={handleAdminUnregister}
         unregisteringId={unregisteringId}
       />

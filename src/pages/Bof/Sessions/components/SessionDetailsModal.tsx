@@ -66,6 +66,7 @@ interface SessionDetailsModalProps {
   onMarkAttendance: (registrationId: number, hasAttended: boolean) => void;
   onUnregister: (registrationId: number) => void;
   unregisteringId?: number | null;
+  markingAttendanceId?: number | null;
 }
 
 const SessionDetailsModal: FC<SessionDetailsModalProps> = ({
@@ -90,6 +91,7 @@ const SessionDetailsModal: FC<SessionDetailsModalProps> = ({
   onMarkAttendance,
   onUnregister,
   unregisteringId,
+  markingAttendanceId,
 }) => {
   const [activeTab, setActiveTab] = useState("registered");
 
@@ -361,6 +363,7 @@ const SessionDetailsModal: FC<SessionDetailsModalProps> = ({
             registeredUsers={registeredUsers}
             registrationsLoading={registrationsLoading}
             onMarkAttendance={onMarkAttendance}
+            markingAttendanceId={markingAttendanceId}
           />
         );
 
@@ -517,6 +520,7 @@ const SessionDetailsModal: FC<SessionDetailsModalProps> = ({
                 registeredUsers={registeredUsers}
                 registrationsLoading={registrationsLoading}
                 onMarkAttendance={onMarkAttendance}
+                markingAttendanceId={markingAttendanceId}
               />
             </TabPane>
             <TabPane
