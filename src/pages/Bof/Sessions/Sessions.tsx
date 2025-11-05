@@ -50,6 +50,7 @@ const Sessions: FC = () => {
   const [sessionRegistrations, setSessionRegistrations] = useState<
     IRegistrationWithUser[]
   >([]);
+  const [unregisteringId, setUnregisteringId] = useState<number | null>(null);
 
   // Create session modal state
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -578,6 +579,25 @@ const Sessions: FC = () => {
     setEmailRecipients(value);
   };
 
+  const handleAdminUnregister = async (registrationId: number) => {
+    try {
+      setUnregisteringId(registrationId);
+      await (
+        await import("actions/registration.action")
+      ).deleteRegistration(registrationId);
+      message.success("Participant unregistered");
+      if (selectedSession) {
+        await fetchSessionRegistrations(selectedSession.id);
+      }
+      // Refresh the main sessions list since spots/waitlist may have changed
+      fetchSessions(currentPage, statusFilter);
+    } catch (e) {
+      message.error("Failed to unregister participant");
+    } finally {
+      setUnregisteringId(null);
+    }
+  };
+
   // Attendance handler
   const handleMarkAttendance = async (
     registrationId: number,
@@ -774,6 +794,8 @@ const Sessions: FC = () => {
         onEmailRecipientsChange={handleEmailRecipientsChange}
         onEmailSubmit={handleEmailSubmit}
         onMarkAttendance={handleMarkAttendance}
+        onUnregister={handleAdminUnregister}
+        unregisteringId={unregisteringId}
       />
     </div>
   );

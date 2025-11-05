@@ -39,15 +39,21 @@ const Join: FC = () => {
       const { data: response } = await getSessionPaginate({
         page,
         limit: pageSize,
-        sortOptions: [{ createdAt: "DESC" }],
+        sortOptions: [{ date: "ASC" }, { time: "ASC" }],
       });
 
-      // Filter sessions based on status
-      const availableSessions = response.data.filter(
-        (session) => session.status !== "CLOSED"
+      const now = new Date();
+      const isPast = (s: ISession) => new Date(`${s.date}T${s.time}`) < now;
+
+      // Available: upcoming, not closed, and not archived
+      const nonArchived = response.data.filter((s) => !s.isArchived);
+      const availableSessions = nonArchived.filter(
+        (session) => !isPast(session) && session.status !== "CLOSED"
       );
+      // Past: include archived OR past OR closed
       const pastSessions = response.data.filter(
-        (session) => session.status === "CLOSED"
+        (session) =>
+          session.isArchived || isPast(session) || session.status === "CLOSED"
       );
 
       if (type === "available") {

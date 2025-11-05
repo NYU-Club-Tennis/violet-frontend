@@ -63,6 +63,8 @@ interface SessionDetailsModalProps {
     body: string;
   }) => void;
   onMarkAttendance: (registrationId: number, hasAttended: boolean) => void;
+  onUnregister: (registrationId: number) => void;
+  unregisteringId?: number | null;
 }
 
 const SessionDetailsModal: FC<SessionDetailsModalProps> = ({
@@ -85,6 +87,8 @@ const SessionDetailsModal: FC<SessionDetailsModalProps> = ({
   onEmailRecipientsChange,
   onEmailSubmit,
   onMarkAttendance,
+  onUnregister,
+  unregisteringId,
 }) => {
   const [activeTab, setActiveTab] = useState("registered");
 
@@ -170,6 +174,20 @@ const SessionDetailsModal: FC<SessionDetailsModalProps> = ({
       key: "createdAt",
       render: (_, record) => new Date(record.createdAt).toLocaleString(),
     },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Button
+          danger
+          size="small"
+          loading={unregisteringId === record.id}
+          onClick={() => onUnregister(record.id)}
+        >
+          Unregister
+        </Button>
+      ),
+    },
   ];
 
   const waitlistColumns: ColumnsType<IRegistrationWithUser> = [
@@ -242,6 +260,16 @@ const SessionDetailsModal: FC<SessionDetailsModalProps> = ({
                           : "N/A"}
                       </span>
                     </div>
+                    <div className="flex justify-end">
+                      <Button
+                        danger
+                        size="small"
+                        loading={unregisteringId === registration.id}
+                        onClick={() => onUnregister(registration.id)}
+                      >
+                        Unregister
+                      </Button>
+                    </div>
                   </div>
                 </Panel>
               ))}
@@ -306,6 +334,16 @@ const SessionDetailsModal: FC<SessionDetailsModalProps> = ({
                             ).toLocaleDateString()
                           : "N/A"}
                       </span>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button
+                        danger
+                        size="small"
+                        loading={unregisteringId === registration.id}
+                        onClick={() => onUnregister(registration.id)}
+                      >
+                        Remove
+                      </Button>
                     </div>
                   </div>
                 </Panel>
