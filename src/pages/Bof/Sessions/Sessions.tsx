@@ -50,6 +50,7 @@ const Sessions: FC = () => {
   const [sessionRegistrations, setSessionRegistrations] = useState<
     IRegistrationWithUser[]
   >([]);
+  const [unregisteringId, setUnregisteringId] = useState<number | null>(null);
 
   // Create session modal state
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -86,6 +87,11 @@ const Sessions: FC = () => {
   >("registered");
 
   const pageSize = 10;
+
+  // Attendance per-row loading state
+  const [markingAttendanceId, setMarkingAttendanceId] = useState<number | null>(
+    null
+  );
 
   // Check if screen is mobile
   useEffect(() => {
@@ -409,7 +415,8 @@ const Sessions: FC = () => {
             <br />
             {session.location}
             <br />
-            {new Date(session.date).toLocaleDateString()} at {session.time}
+            {dayjs(`${session.date}T00:00`).format("MMM D, YYYY")} at{" "}
+            {session.time}
           </div>
           {hasRegistrations && (
             <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded">
@@ -578,12 +585,32 @@ const Sessions: FC = () => {
     setEmailRecipients(value);
   };
 
+  const handleAdminUnregister = async (registrationId: number) => {
+    try {
+      setUnregisteringId(registrationId);
+      await (
+        await import("actions/registration.action")
+      ).deleteRegistration(registrationId);
+      message.success("Participant unregistered");
+      if (selectedSession) {
+        await fetchSessionRegistrations(selectedSession.id);
+      }
+      // Refresh the main sessions list since spots/waitlist may have changed
+      fetchSessions(currentPage, statusFilter);
+    } catch (e) {
+      message.error("Failed to unregister participant");
+    } finally {
+      setUnregisteringId(null);
+    }
+  };
+
   // Attendance handler
   const handleMarkAttendance = async (
     registrationId: number,
     hasAttended: boolean
   ) => {
     try {
+      setMarkingAttendanceId(registrationId);
       console.log(
         "Marking attendance for registration:",
         registrationId,
@@ -621,6 +648,8 @@ const Sessions: FC = () => {
       } else {
         message.error("Failed to mark attendance. Please try again.");
       }
+    } finally {
+      setMarkingAttendanceId(null);
     }
   };
 
@@ -774,6 +803,9 @@ const Sessions: FC = () => {
         onEmailRecipientsChange={handleEmailRecipientsChange}
         onEmailSubmit={handleEmailSubmit}
         onMarkAttendance={handleMarkAttendance}
+        markingAttendanceId={markingAttendanceId}
+        onUnregister={handleAdminUnregister}
+        unregisteringId={unregisteringId}
       />
     </div>
   );

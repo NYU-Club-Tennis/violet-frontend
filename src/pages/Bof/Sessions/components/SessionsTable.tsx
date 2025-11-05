@@ -9,6 +9,7 @@ import { ISession } from "interfaces/session.interface";
 import { SessionStatus } from "constants/enum/session.status.enum";
 import { LEVELS } from "constants/enum/levels.enum";
 import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
 
 interface SessionsTableProps {
   sessions: ISession[];
@@ -92,7 +93,7 @@ const SessionsTable: FC<SessionsTableProps> = ({
       key: "datetime",
       render: (_, record) => (
         <Space direction="vertical" size="small">
-          <div>{new Date(record.date).toLocaleDateString()}</div>
+          <div>{dayjs(`${record.date}T00:00`).format("MMM D, YYYY")}</div>
           <div className="text-gray-600">{record.time}</div>
         </Space>
       ),
@@ -231,7 +232,7 @@ const SessionsTable: FC<SessionsTableProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex flex-col min-w-0 flex-1">
               <div className="font-medium text-xs text-gray-800">
-                {new Date(record.date).toLocaleDateString()}
+                {dayjs(`${record.date}T00:00`).format("MMM D, YYYY")}
               </div>
               <div className="text-xs text-gray-600">{record.time}</div>
             </div>

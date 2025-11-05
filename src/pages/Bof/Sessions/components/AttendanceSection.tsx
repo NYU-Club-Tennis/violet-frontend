@@ -13,6 +13,7 @@ interface AttendanceSectionProps {
   registeredUsers: IRegistrationWithUser[];
   registrationsLoading: boolean;
   onMarkAttendance: (registrationId: number, hasAttended: boolean) => void;
+  markingAttendanceId?: number | null;
 }
 
 const AttendanceSection: FC<AttendanceSectionProps> = ({
@@ -21,6 +22,7 @@ const AttendanceSection: FC<AttendanceSectionProps> = ({
   registeredUsers,
   registrationsLoading,
   onMarkAttendance,
+  markingAttendanceId,
 }) => {
   const isSessionPast = (session: ISession): boolean => {
     const sessionDateTime = new Date(`${session.date}T${session.time}`);
@@ -100,6 +102,7 @@ const AttendanceSection: FC<AttendanceSectionProps> = ({
             className="bg-green-500 hover:!bg-green-600"
             onClick={() => onMarkAttendance(record.id, true)}
             disabled={record.hasAttended}
+            loading={markingAttendanceId === record.id}
           >
             Mark Attended
           </Button>
@@ -108,6 +111,7 @@ const AttendanceSection: FC<AttendanceSectionProps> = ({
             danger
             onClick={() => onMarkAttendance(record.id, false)}
             disabled={record.status === "no_show"}
+            loading={markingAttendanceId === record.id}
           >
             Mark No-Show
           </Button>
@@ -184,6 +188,7 @@ const AttendanceSection: FC<AttendanceSectionProps> = ({
                           ? "bg-green-500 hover:!bg-green-600"
                           : ""
                       }
+                      loading={markingAttendanceId === registration.id}
                     >
                       Present
                     </Button>
@@ -196,6 +201,7 @@ const AttendanceSection: FC<AttendanceSectionProps> = ({
                           ? "bg-red-500 hover:!bg-red-600"
                           : ""
                       }
+                      loading={markingAttendanceId === registration.id}
                     >
                       Absent
                     </Button>
