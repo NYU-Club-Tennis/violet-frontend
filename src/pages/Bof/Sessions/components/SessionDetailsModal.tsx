@@ -28,6 +28,7 @@ import SessionStatusManagement from "./SessionStatusManagement";
 import EmailSection from "./EmailSection";
 import AttendanceSection from "./AttendanceSection";
 import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -391,8 +392,8 @@ const SessionDetailsModal: FC<SessionDetailsModalProps> = ({
               {selectedSession && (
                 <>
                   <CalendarOutlined />{" "}
-                  {new Date(selectedSession.date).toLocaleDateString()} at{" "}
-                  {selectedSession.time}
+                  {dayjs(`${selectedSession.date}T00:00`).format("MMM D, YYYY")}{" "}
+                  at {selectedSession.time}
                   <Divider type="vertical" />
                   <EnvironmentOutlined /> {selectedSession.location}
                 </>

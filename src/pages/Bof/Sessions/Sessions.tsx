@@ -410,7 +410,8 @@ const Sessions: FC = () => {
             <br />
             {session.location}
             <br />
-            {new Date(session.date).toLocaleDateString()} at {session.time}
+            {dayjs(`${session.date}T00:00`).format("MMM D, YYYY")} at{" "}
+            {session.time}
           </div>
           {hasRegistrations && (
             <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded">

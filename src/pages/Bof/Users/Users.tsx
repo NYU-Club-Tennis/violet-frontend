@@ -186,11 +186,12 @@ const Users: FC = () => {
 
     const user = users.find((u) => u.id === userId);
     const statusName = newBanStatus ? "banned" : "unbanned";
+    const actionVerb = newBanStatus ? "ban" : "unban";
 
     confirm({
       title: "Confirm Ban Status Change",
       icon: <ExclamationCircleOutlined />,
-      content: `Are you sure you want to ${statusName} ${user?.firstName} ${user?.lastName}?`,
+      content: `Are you sure you want to ${actionVerb} ${user?.firstName} ${user?.lastName}?`,
       okText: `Yes, ${statusName === "banned" ? "Ban" : "Unban"} User`,
       cancelText: "Cancel",
       onOk: async () => {
